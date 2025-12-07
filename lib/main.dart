@@ -24,7 +24,7 @@ class UrlShortenerApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = _createRouter(ref);
-    
+
     return MaterialApp.router(
       title: 'AWS URL Shortener',
       debugShowCheckedModeBanner: false,
@@ -45,10 +45,7 @@ class UrlShortenerApp extends ConsumerWidget {
           path: '/signup',
           builder: (context, state) => const SignUpScreen(),
         ),
-        GoRoute(
-          path: '/mfa',
-          builder: (context, state) => const MfaScreen(),
-        ),
+        GoRoute(path: '/mfa', builder: (context, state) => const MfaScreen()),
         GoRoute(
           path: '/forgot-password',
           builder: (context, state) => const ForgotPasswordScreen(),
@@ -83,7 +80,8 @@ class UrlShortenerApp extends ConsumerWidget {
       redirect: (context, state) {
         final authState = ref.read(authProvider);
         final isAuthenticated = authState.isAuthenticated;
-        final isOnAuthPage = state.matchedLocation == '/signin' ||
+        final isOnAuthPage =
+            state.matchedLocation == '/signin' ||
             state.matchedLocation == '/signup' ||
             state.matchedLocation == '/mfa' ||
             state.matchedLocation == '/forgot-password';
@@ -103,5 +101,3 @@ class UrlShortenerApp extends ConsumerWidget {
     );
   }
 }
-
-

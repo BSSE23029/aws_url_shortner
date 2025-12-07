@@ -32,11 +32,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   Future<void> _handleSignUp() async {
     if (_formKey.currentState!.validate() && _acceptTerms) {
-      await ref.read(authProvider.notifier).signUp(
-        email: _emailController.text,
-        password: _passwordController.text,
-        name: _nameController.text,
-      );
+      await ref
+          .read(authProvider.notifier)
+          .signUp(
+            email: _emailController.text,
+            password: _passwordController.text,
+            name: _nameController.text,
+          );
 
       final authState = ref.read(authProvider);
       if (authState.errorMessage == null && mounted) {
@@ -227,7 +229,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
                     // Sign Up Button
                     ElevatedButton(
-                      onPressed: ref.watch(authProvider).isLoading ? null : _handleSignUp,
+                      onPressed: ref.watch(authProvider).isLoading
+                          ? null
+                          : _handleSignUp,
                       child: ref.watch(authProvider).isLoading
                           ? const SizedBox(
                               height: 20,

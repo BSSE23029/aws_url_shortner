@@ -1,5 +1,5 @@
 /// Application Configuration
-/// 
+///
 /// Set isDebugMode = true to use mock data (no AWS connection needed)
 /// Set isDebugMode = false to connect to real AWS Lambda functions
 class AppConfig {
@@ -14,7 +14,8 @@ class AppConfig {
     'us-east-1': 'https://your-api-id.execute-api.us-east-1.amazonaws.com/prod',
     'us-west-2': 'https://your-api-id.execute-api.us-west-2.amazonaws.com/prod',
     'eu-west-1': 'https://your-api-id.execute-api.eu-west-1.amazonaws.com/prod',
-    'ap-southeast-1': 'https://your-api-id.execute-api.ap-southeast-1.amazonaws.com/prod',
+    'ap-southeast-1':
+        'https://your-api-id.execute-api.ap-southeast-1.amazonaws.com/prod',
   };
 
   /// Default region to use
@@ -34,7 +35,7 @@ class AppConfig {
   static const String authMfaEndpoint = '/auth/mfa';
   static const String authForgotPasswordEndpoint = '/auth/forgot-password';
   static const String authResetPasswordEndpoint = '/auth/reset-password';
-  
+
   static const String urlsListEndpoint = '/urls';
   static const String urlsCreateEndpoint = '/urls/create';
   static const String urlsDetailsEndpoint = '/urls/details';

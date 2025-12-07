@@ -24,7 +24,7 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
     // Auto-focus first field
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNodes[0].requestFocus();
-      
+
       // Listen to auth state
       ref.listenManual(authProvider, (previous, next) {
         if (next.isAuthenticated) {
@@ -160,7 +160,9 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: ref.watch(authProvider).isLoading ? null : _handleVerify,
+                      onPressed: ref.watch(authProvider).isLoading
+                          ? null
+                          : _handleVerify,
                       child: ref.watch(authProvider).isLoading
                           ? const SizedBox(
                               height: 20,

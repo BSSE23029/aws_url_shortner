@@ -188,5 +188,7 @@ enum ApiErrorType {
   wafBlocked, // Security blocked
   validationError,
   serverError,
+  unauthorized,
+  notFound,
   unknown,
 }

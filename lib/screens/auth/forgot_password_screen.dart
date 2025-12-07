@@ -7,7 +7,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -23,9 +24,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   Future<void> _handleResetPassword() async {
     if (_formKey.currentState!.validate()) {
-      final success = await ref.read(authProvider.notifier).forgotPassword(
-        _emailController.text,
-      );
+      final success = await ref
+          .read(authProvider.notifier)
+          .forgotPassword(_emailController.text);
 
       if (success && mounted) {
         setState(() => _emailSent = true);
@@ -97,7 +98,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
           // Submit Button
           ElevatedButton(
-            onPressed: ref.watch(authProvider).isLoading ? null : _handleResetPassword,
+            onPressed: ref.watch(authProvider).isLoading
+                ? null
+                : _handleResetPassword,
             child: ref.watch(authProvider).isLoading
                 ? const SizedBox(
                     height: 20,

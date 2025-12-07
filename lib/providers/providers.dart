@@ -68,17 +68,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       if (requiresMfa) {
         // MFA required
-        state = state.copyWith(
-          isLoading: false,
-          requiresMfa: true,
-        );
+        state = state.copyWith(isLoading: false, requiresMfa: true);
       } else {
         // Direct login
         final token = data['token'] as String;
         final userData = data['user'] as Map<String, dynamic>;
-        
+
         _apiClient.setAuthToken(token);
-        
+
         state = state.copyWith(
           user: UserModel.fromJson(userData),
           token: token,
@@ -109,10 +106,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
 
     if (response.success) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: null,
-      );
+      state = state.copyWith(isLoading: false, errorMessage: null);
     } else {
       state = state.copyWith(
         isLoading: false,
@@ -131,9 +125,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final data = response.data!;
       final token = data['token'] as String;
       final userData = data['user'] as Map<String, dynamic>;
-      
+
       _apiClient.setAuthToken(token);
-      
+
       state = state.copyWith(
         user: UserModel.fromJson(userData),
         token: token,
@@ -183,11 +177,7 @@ class UrlsState {
   final bool isLoading;
   final String? errorMessage;
 
-  UrlsState({
-    this.urls = const [],
-    this.isLoading = false,
-    this.errorMessage,
-  });
+  UrlsState({this.urls = const [], this.isLoading = false, this.errorMessage});
 
   UrlsState copyWith({
     List<UrlModel>? urls,
@@ -216,11 +206,8 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
     if (response.success && response.data != null) {
       final urlsList = response.data!['urls'] as List;
       final urls = urlsList.map((json) => UrlModel.fromJson(json)).toList();
-      
-      state = state.copyWith(
-        urls: urls,
-        isLoading: false,
-      );
+
+      state = state.copyWith(urls: urls, isLoading: false);
     } else {
       state = state.copyWith(
         isLoading: false,
@@ -245,9 +232,7 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
       isActive: true,
     );
 
-    state = state.copyWith(
-      urls: [tempUrl, ...state.urls],
-    );
+    state = state.copyWith(urls: [tempUrl, ...state.urls]);
 
     // Make actual API call
     final response = await _apiClient.createUrl(
@@ -258,12 +243,12 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
     if (response.success && response.data != null) {
       final urlData = response.data!['url'] as Map<String, dynamic>;
       final newUrl = UrlModel.fromJson(urlData);
-      
+
       // Replace temp URL with real one
       final updatedUrls = state.urls.map((url) {
         return url.id == tempUrl.id ? newUrl : url;
       }).toList();
-      
+
       state = state.copyWith(urls: updatedUrls);
     } else {
       // Remove temp URL on failure
@@ -297,7 +282,7 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
       final analyticsData = response.data!['analytics'] as Map<String, dynamic>;
       return AnalyticsModel.fromJson(analyticsData);
     }
-    
+
     return null;
   }
 }

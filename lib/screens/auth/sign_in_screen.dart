@@ -26,10 +26,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   Future<void> _handleSignIn() async {
     if (_formKey.currentState!.validate()) {
-      await ref.read(authProvider.notifier).signIn(
-        _emailController.text,
-        _passwordController.text,
-      );
+      await ref
+          .read(authProvider.notifier)
+          .signIn(_emailController.text, _passwordController.text);
     }
   }
 
@@ -149,7 +148,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
                     // Sign In Button
                     ElevatedButton(
-                      onPressed: ref.watch(authProvider).isLoading ? null : _handleSignIn,
+                      onPressed: ref.watch(authProvider).isLoading
+                          ? null
+                          : _handleSignIn,
                       child: ref.watch(authProvider).isLoading
                           ? const SizedBox(
                               height: 20,

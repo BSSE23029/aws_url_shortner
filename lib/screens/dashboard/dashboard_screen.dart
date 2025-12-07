@@ -18,7 +18,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // Load data after the widget tree is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {
@@ -74,7 +77,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               Expanded(
                                 child: _buildStatCard(
                                   'Total URLs',
-                                  ref.watch(urlsProvider).urls.length.toString(),
+                                  ref
+                                      .watch(urlsProvider)
+                                      .urls
+                                      .length
+                                      .toString(),
                                   Icons.link,
                                   AppTheme.accentTeal,
                                 ),
@@ -83,7 +90,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               Expanded(
                                 child: _buildStatCard(
                                   'Total Clicks',
-                                  ref.watch(urlsProvider).urls.fold<int>(0, (sum, url) => sum + url.clickCount).toString(),
+                                  ref
+                                      .watch(urlsProvider)
+                                      .urls
+                                      .fold<int>(
+                                        0,
+                                        (sum, url) => sum + url.clickCount,
+                                      )
+                                      .toString(),
                                   Icons.mouse,
                                   AppTheme.lightBlue,
                                 ),
@@ -92,7 +106,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               Expanded(
                                 child: _buildStatCard(
                                   'Active',
-                                  ref.watch(urlsProvider).urls.where((url) => url.isActive).length.toString(),
+                                  ref
+                                      .watch(urlsProvider)
+                                      .urls
+                                      .where((url) => url.isActive)
+                                      .length
+                                      .toString(),
                                   Icons.check_circle,
                                   AppTheme.success,
                                 ),

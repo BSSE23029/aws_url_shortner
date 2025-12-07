@@ -4,18 +4,18 @@ import '../config.dart';
 import '../models/models.dart';
 
 /// Plug-and-play API middleware for AWS Lambda
-/// 
+///
 /// Automatically handles:
 /// - Debug mode (mock data) vs Production mode (real AWS calls)
 /// - Multi-region support
 /// - Error handling
 /// - Authentication headers
 /// - JSON serialization
-/// 
+///
 /// Just plug in your Lambda URLs in config.dart and it works!
 class ApiClient {
   String? _authToken;
-  
+
   /// Set authentication token (JWT from Cognito)
   void setAuthToken(String token) {
     _authToken = token;
@@ -55,16 +55,24 @@ class ApiClient {
 
       switch (method.toUpperCase()) {
         case 'GET':
-          response = await http.get(url, headers: headers).timeout(AppConfig.requestTimeout);
+          response = await http
+              .get(url, headers: headers)
+              .timeout(AppConfig.requestTimeout);
           break;
         case 'POST':
-          response = await http.post(url, headers: headers, body: jsonEncode(body)).timeout(AppConfig.requestTimeout);
+          response = await http
+              .post(url, headers: headers, body: jsonEncode(body))
+              .timeout(AppConfig.requestTimeout);
           break;
         case 'PUT':
-          response = await http.put(url, headers: headers, body: jsonEncode(body)).timeout(AppConfig.requestTimeout);
+          response = await http
+              .put(url, headers: headers, body: jsonEncode(body))
+              .timeout(AppConfig.requestTimeout);
           break;
         case 'DELETE':
-          response = await http.delete(url, headers: headers).timeout(AppConfig.requestTimeout);
+          response = await http
+              .delete(url, headers: headers)
+              .timeout(AppConfig.requestTimeout);
           break;
         default:
           throw Exception('Unsupported HTTP method: $method');
@@ -120,7 +128,11 @@ class ApiClient {
   }
 
   /// Generate mock responses for debug mode
-  Future<ApiResponse<T>> _getMockResponse<T>(String endpoint, String method, Map<String, dynamic>? body) async {
+  Future<ApiResponse<T>> _getMockResponse<T>(
+    String endpoint,
+    String method,
+    Map<String, dynamic>? body,
+  ) async {
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 300));
 
@@ -128,16 +140,20 @@ class ApiClient {
     if (endpoint == AppConfig.authSignInEndpoint) {
       return ApiResponse<T>(
         success: true,
-        data: {
-          'token': 'mock_jwt_token_12345',
-          'user': {
-            'id': 'user_123',
-            'email': body?['email'] ?? 'demo@example.com',
-            'name': 'Demo User',
-            'mfaEnabled': true,
-          },
-          'requiresMfa': true,
-        } as T,
+        data:
+            {
+                  'token': 'mock_jwt_token_12345',
+                  'user': {
+                    'id': 'user_123',
+                    'email': body?['email'] ?? 'demo@example.com',
+                    'name': 'Demo User',
+                    'createdAt': DateTime.now().toIso8601String(),
+                    'mfaEnabled': false,
+                  },
+                  'requiresMfa':
+                      false, // Changed to false for easier debug mode testing
+                }
+                as T,
         message: 'Sign in successful',
       );
     }
@@ -145,13 +161,17 @@ class ApiClient {
     if (endpoint == AppConfig.authSignUpEndpoint) {
       return ApiResponse<T>(
         success: true,
-        data: {
-          'user': {
-            'id': 'user_new_123',
-            'email': body?['email'] ?? 'newuser@example.com',
-            'name': body?['name'] ?? 'New User',
-          },
-        } as T,
+        data:
+            {
+                  'user': {
+                    'id': 'user_new_123',
+                    'email': body?['email'] ?? 'newuser@example.com',
+                    'name': body?['name'] ?? 'New User',
+                    'createdAt': DateTime.now().toIso8601String(),
+                    'mfaEnabled': false,
+                  },
+                }
+                as T,
         message: 'Account created successfully',
       );
     }
@@ -159,14 +179,18 @@ class ApiClient {
     if (endpoint == AppConfig.authMfaEndpoint) {
       return ApiResponse<T>(
         success: true,
-        data: {
-          'token': 'mock_jwt_token_verified_67890',
-          'user': {
-            'id': 'user_123',
-            'email': 'demo@example.com',
-            'name': 'Demo User',
-          },
-        } as T,
+        data:
+            {
+                  'token': 'mock_jwt_token_verified_67890',
+                  'user': {
+                    'id': 'user_123',
+                    'email': 'demo@example.com',
+                    'name': 'Demo User',
+                    'createdAt': DateTime.now().toIso8601String(),
+                    'mfaEnabled': true,
+                  },
+                }
+                as T,
         message: 'MFA verified',
       );
     }
@@ -182,38 +206,49 @@ class ApiClient {
     if (endpoint == AppConfig.urlsListEndpoint) {
       return ApiResponse<T>(
         success: true,
-        data: {
-          'urls': [
+        data:
             {
-              'id': 'url_1',
-              'originalUrl': 'https://example.com/very-long-url',
-              'shortCode': 'abc123',
-              'shortUrl': 'https://short.link/abc123',
-              'clickCount': 1234,
-              'createdAt': DateTime.now().subtract(const Duration(days: 5)).toIso8601String(),
-              'isActive': true,
-            },
-            {
-              'id': 'url_2',
-              'originalUrl': 'https://github.com/flutter/flutter',
-              'shortCode': 'xyz789',
-              'shortUrl': 'https://short.link/xyz789',
-              'clickCount': 567,
-              'createdAt': DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
-              'isActive': true,
-            },
-            {
-              'id': 'url_3',
-              'originalUrl': 'https://docs.flutter.dev',
-              'shortCode': 'def456',
-              'shortUrl': 'https://short.link/def456',
-              'clickCount': 89,
-              'createdAt': DateTime.now().subtract(const Duration(hours: 3)).toIso8601String(),
-              'isActive': true,
-            },
-          ],
-          'total': 3,
-        } as T,
+                  'urls': [
+                    {
+                      'id': 'url_1',
+                      'originalUrl': 'https://example.com/very-long-url',
+                      'shortCode': 'abc123',
+                      'shortUrl': 'https://short.link/abc123',
+                      'clickCount': 1234,
+                      'createdAt': DateTime.now()
+                          .subtract(const Duration(days: 5))
+                          .toIso8601String(),
+                      'userId': 'user_123',
+                      'isActive': true,
+                    },
+                    {
+                      'id': 'url_2',
+                      'originalUrl': 'https://github.com/flutter/flutter',
+                      'shortCode': 'xyz789',
+                      'shortUrl': 'https://short.link/xyz789',
+                      'clickCount': 567,
+                      'createdAt': DateTime.now()
+                          .subtract(const Duration(days: 2))
+                          .toIso8601String(),
+                      'userId': 'user_123',
+                      'isActive': true,
+                    },
+                    {
+                      'id': 'url_3',
+                      'originalUrl': 'https://docs.flutter.dev',
+                      'shortCode': 'def456',
+                      'shortUrl': 'https://short.link/def456',
+                      'clickCount': 89,
+                      'createdAt': DateTime.now()
+                          .subtract(const Duration(hours: 3))
+                          .toIso8601String(),
+                      'userId': 'user_123',
+                      'isActive': true,
+                    },
+                  ],
+                  'total': 3,
+                }
+                as T,
         message: 'URLs retrieved successfully',
       );
     }
@@ -221,20 +256,23 @@ class ApiClient {
     if (endpoint == AppConfig.urlsCreateEndpoint) {
       final customCode = body?['customCode'] as String?;
       final shortCode = customCode ?? _generateRandomCode();
-      
+
       return ApiResponse<T>(
         success: true,
-        data: {
-          'url': {
-            'id': 'url_new_${DateTime.now().millisecondsSinceEpoch}',
-            'originalUrl': body?['originalUrl'] ?? '',
-            'shortCode': shortCode,
-            'shortUrl': 'https://short.link/$shortCode',
-            'clickCount': 0,
-            'createdAt': DateTime.now().toIso8601String(),
-            'isActive': true,
-          },
-        } as T,
+        data:
+            {
+                  'url': {
+                    'id': 'url_new_${DateTime.now().millisecondsSinceEpoch}',
+                    'originalUrl': body?['originalUrl'] ?? '',
+                    'shortCode': shortCode,
+                    'shortUrl': 'https://short.link/$shortCode',
+                    'clickCount': 0,
+                    'createdAt': DateTime.now().toIso8601String(),
+                    'userId': 'user_123',
+                    'isActive': true,
+                  },
+                }
+                as T,
         message: 'URL created successfully',
       );
     }
@@ -242,31 +280,33 @@ class ApiClient {
     if (endpoint.startsWith(AppConfig.urlsAnalyticsEndpoint)) {
       return ApiResponse<T>(
         success: true,
-        data: {
-          'analytics': {
-            'clicksByDate': {
-              '2024-12-01': 45,
-              '2024-12-02': 67,
-              '2024-12-03': 89,
-              '2024-12-04': 123,
-              '2024-12-05': 98,
-              '2024-12-06': 156,
-              '2024-12-07': 134,
-            },
-            'clicksByCountry': {
-              'United States': 234,
-              'United Kingdom': 123,
-              'Germany': 89,
-              'Japan': 67,
-              'Canada': 45,
-            },
-            'clicksByDevice': {
-              'Mobile': 345,
-              'Desktop': 234,
-              'Tablet': 89,
-            },
-          },
-        } as T,
+        data:
+            {
+                  'analytics': {
+                    'clicksByDate': {
+                      '2024-12-01': 45,
+                      '2024-12-02': 67,
+                      '2024-12-03': 89,
+                      '2024-12-04': 123,
+                      '2024-12-05': 98,
+                      '2024-12-06': 156,
+                      '2024-12-07': 134,
+                    },
+                    'clicksByCountry': {
+                      'United States': 234,
+                      'United Kingdom': 123,
+                      'Germany': 89,
+                      'Japan': 67,
+                      'Canada': 45,
+                    },
+                    'clicksByDevice': {
+                      'Mobile': 345,
+                      'Desktop': 234,
+                      'Tablet': 89,
+                    },
+                  },
+                }
+                as T,
         message: 'Analytics retrieved successfully',
       );
     }
@@ -280,9 +320,16 @@ class ApiClient {
 
   /// Generate random short code
   String _generateRandomCode() {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     return String.fromCharCodes(
-      List.generate(6, (index) => chars.codeUnitAt(DateTime.now().millisecondsSinceEpoch % chars.length + index % chars.length)),
+      List.generate(
+        6,
+        (index) => chars.codeUnitAt(
+          DateTime.now().millisecondsSinceEpoch % chars.length +
+              index % chars.length,
+        ),
+      ),
     );
   }
 
@@ -291,7 +338,10 @@ class ApiClient {
   // ============================================
 
   /// Sign in with email and password
-  Future<ApiResponse<Map<String, dynamic>>> signIn(String email, String password) {
+  Future<ApiResponse<Map<String, dynamic>>> signIn(
+    String email,
+    String password,
+  ) {
     return request<Map<String, dynamic>>(
       endpoint: AppConfig.authSignInEndpoint,
       method: 'POST',
