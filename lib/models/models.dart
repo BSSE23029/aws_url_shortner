@@ -157,7 +157,8 @@ class ApiResponse<T> {
     this.errorType,
   });
 
-  factory ApiResponse.success(T data, {String? message}) {
+  // FIX: Changed 'T data' to 'T? data' to allow nulls in success responses
+  factory ApiResponse.success(T? data, {String? message}) {
     return ApiResponse(
       success: true,
       data: data,
@@ -184,6 +185,7 @@ class ApiResponse<T> {
 enum ApiErrorType {
   networkError,
   sessionExpired,
+  authenticationFailed,
   rateLimitExceeded, // 429
   wafBlocked, // Security blocked
   validationError,

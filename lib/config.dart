@@ -1,51 +1,42 @@
 /// Application Configuration
-///
-/// Set isDebugMode = true to use mock data (no AWS connection needed)
-/// Set isDebugMode = false to connect to real AWS Lambda functions
 class AppConfig {
   /// Debug mode flag
-  /// true = Mock data, no server calls, no permissions needed
-  /// false = Real AWS Lambda connections
-  static const bool isDebugMode = true;
+  /// true = Mock data, no server calls
+  /// false = Real AWS Lambda & Cognito connections
+  static const bool isDebugMode = false; 
 
   /// AWS Lambda Base URLs (multi-region support)
-  /// Update these with your actual Lambda function URLs after deployment
   static const Map<String, String> lambdaUrls = {
-    'us-east-1': 'https://your-api-id.execute-api.us-east-1.amazonaws.com/prod',
-    'us-west-2': 'https://your-api-id.execute-api.us-west-2.amazonaws.com/prod',
-    'eu-west-1': 'https://your-api-id.execute-api.eu-west-1.amazonaws.com/prod',
-    'ap-southeast-1':
-        'https://your-api-id.execute-api.ap-southeast-1.amazonaws.com/prod',
+    'us-east-1': 'https://bv6uo4yith.execute-api.us-east-1.amazonaws.com/stage',
   };
 
-  /// Default region to use
   static const String defaultRegion = 'us-east-1';
-
-  /// Current active region (can be changed at runtime)
   static String currentRegion = defaultRegion;
 
-  /// Get the current Lambda base URL
   static String get currentLambdaUrl {
     return lambdaUrls[currentRegion] ?? lambdaUrls[defaultRegion]!;
   }
 
-  /// API Endpoints (Lambda function paths)
-  static const String authSignInEndpoint = '/auth/signin';
-  static const String authSignUpEndpoint = '/auth/signup';
-  static const String authMfaEndpoint = '/auth/mfa';
-  static const String authForgotPasswordEndpoint = '/auth/forgot-password';
-  static const String authResetPasswordEndpoint = '/auth/reset-password';
+  /// AWS Cognito Configuration
+  static const String cognitoUserPoolId = 'us-east-1_OJORVuNmI';
+  static const String cognitoClientId   = '5s971p9gkjn8ughq25jqfo5qk5';
+  static const String cognitoRegion     = 'us-east-1';
 
+  /// API Endpoints
   static const String urlsListEndpoint = '/urls';
   static const String urlsCreateEndpoint = '/urls/create';
   static const String urlsDetailsEndpoint = '/urls/details';
   static const String urlsAnalyticsEndpoint = '/urls/analytics';
   static const String urlsDeleteEndpoint = '/urls/delete';
+  
+  // Note: Auth endpoints are removed/unused in production because we talk to Cognito directly,
+  // but kept for compatibility with the mock logic if you ever switch isDebugMode back on.
+  static const String authSignInEndpoint = '/auth/signin';
+  static const String authSignUpEndpoint = '/auth/signup';
+  static const String authMfaEndpoint = '/auth/mfa';
+  static const String authForgotPasswordEndpoint = '/auth/forgot-password';
 
-  /// Request timeout duration
   static const Duration requestTimeout = Duration(seconds: 10);
-
-  /// App metadata
   static const String appName = 'AWS URL Shortener';
   static const String appVersion = '1.0.0';
 }
