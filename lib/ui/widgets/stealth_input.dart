@@ -8,6 +8,11 @@ class StealthInput extends StatelessWidget {
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
 
+  // Navigation & Focus Support
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final void Function(String)? onSubmitted;
+
   const StealthInput({
     super.key,
     required this.label,
@@ -16,14 +21,20 @@ class StealthInput extends StatelessWidget {
     this.isObscure = false,
     this.validator,
     this.keyboardType,
+    this.focusNode,
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       obscureText: isObscure,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      onFieldSubmitted: onSubmitted,
       style: const TextStyle(color: Colors.white, fontSize: 16),
       cursorColor: Colors.white,
       decoration: InputDecoration(
@@ -34,7 +45,6 @@ class StealthInput extends StatelessWidget {
           color: Colors.white.withValues(alpha: 0.7),
           size: 22,
         ),
-        // The "Stealth" Outline Style
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -61,6 +71,7 @@ class StealthInput extends StatelessWidget {
         ),
       ),
       validator: validator,
+      // We rely on external state for validation timing (AutoValidateMode.disabled is default)
     );
   }
 }

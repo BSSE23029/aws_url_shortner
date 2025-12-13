@@ -18,25 +18,63 @@ class SignInScreen extends ConsumerStatefulWidget {
 class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+
+  bool _isValid = false;
+  final _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.listenManual(authProvider, (previous, next) {
-        if (next.isAuthenticated) context.go('/dashboard');
-        if (next.errorMessage != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(next.errorMessage!)));
-        }
-      });
-    });
+    _emailController.addListener(_validateForm);
+    _passwordController.addListener(_validateForm);
+  }
+
+  void _validateForm() {
+    final emailValid = _emailRegex.hasMatch(_emailController.text);
+    final passValid = _passwordController.text.isNotEmpty;
+    if (_isValid != (emailValid && passValid)) {
+      setState(() => _isValid = emailValid && passValid);
+    }
+  }
+
+  void _handleSubmit() {
+    if (_isValid) {
+      ref
+          .read(authProvider.notifier)
+          .signIn(_emailController.text, _passwordController.text);
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // FIX: Safe listener inside build
+    ref.listen(authProvider, (previous, next) {
+      if (next.isAuthenticated) {
+        context.go('/dashboard');
+      }
+      if (next.errorMessage != null &&
+          next.errorMessage != previous?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    });
+
     return CyberScaffold(
       enableBack: false,
       body: Center(
@@ -46,80 +84,72 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             children: [
               const Text(
                 'Welcome Back',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 40),
 
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 450),
                 child: GlassCard(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        StealthInput(
-                          label: "Email",
-                          icon: PhosphorIconsRegular.envelopeSimple,
-                          controller: _emailController,
-                          validator: (v) =>
-                              v?.contains('@') == true ? null : 'Invalid Email',
-                        ),
-                        const SizedBox(height: 16),
-                        StealthInput(
-                          label: "Password",
-                          icon: PhosphorIconsRegular.lockKey,
-                          isObscure: true,
-                          controller: _passwordController,
-                          validator: (v) =>
-                              v?.isEmpty == true ? 'Required' : null,
-                        ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      StealthInput(
+                        label: "Email",
+                        icon: PhosphorIconsRegular.envelopeSimple,
+                        controller: _emailController,
+                        focusNode: _emailFocus,
+                        textInputAction: TextInputAction.next,
+                        onSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_passwordFocus),
+                      ),
+                      const SizedBox(height: 16),
+                      StealthInput(
+                        label: "Password",
+                        icon: PhosphorIconsRegular.lockKey,
+                        isObscure: true,
+                        controller: _passwordController,
+                        focusNode: _passwordFocus,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _handleSubmit(),
+                      ),
 
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () => context.push('/forgot-password'),
-                            child: const Text(
-                              'Forgot Password?',
-                              style: TextStyle(color: Colors.white54),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => context.push('/forgot-password'),
+                          child: Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
+                      ),
 
-                        const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                        PhysicsButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              ref
-                                  .read(authProvider.notifier)
-                                  .signIn(
-                                    _emailController.text,
-                                    _passwordController.text,
-                                  );
-                            }
-                          },
-                          backgroundColor: const Color(0xFF222222),
-                          child: ref.watch(authProvider).isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text(
-                                  "Log In",
-                                  style: TextStyle(color: Colors.white),
+                      PhysicsButton(
+                        onPressed:
+                            _isValid && !ref.watch(authProvider).isLoading
+                            ? _handleSubmit
+                            : null,
+                        child: ref.watch(authProvider).isLoading
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Theme.of(
+                                    context,
+                                  ).scaffoldBackgroundColor,
+                                  strokeWidth: 2,
                                 ),
-                        ),
-                      ],
-                    ),
+                              )
+                            : const Text("Log In"),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -127,9 +157,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               const SizedBox(height: 32),
               TextButton(
                 onPressed: () => context.push('/signup'),
-                child: const Text(
+                child: Text(
                   'Create an Account',
-                  style: TextStyle(color: Colors.blueGrey),
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
                 ),
               ),
             ],

@@ -7,7 +7,7 @@ import 'providers/theme_provider.dart';
 import 'providers/providers.dart';
 import 'models/models.dart';
 
-// Screens
+// Screen Imports
 import 'ui/screens/auth/sign_in_screen.dart';
 import 'ui/screens/auth/sign_up_screen.dart';
 import 'ui/screens/auth/mfa_screen.dart';
@@ -35,9 +35,14 @@ class UrlShortenerApp extends ConsumerWidget {
       title: 'AWS URL Shortener',
       debugShowCheckedModeBanner: false,
 
-      // Inject Dynamic Theme
-      theme: AppTheme.generateDark(themeSettings),
-      themeMode: ThemeMode.dark, // Force Dark for Obsidian look
+      // 1. Generate LIGHT version
+      theme: AppTheme.generate(themeSettings, brightness: Brightness.light),
+
+      // 2. Generate DARK version
+      darkTheme: AppTheme.generate(themeSettings, brightness: Brightness.dark),
+
+      // 3. Let settings decide (System, Light, or Dark)
+      themeMode: themeSettings.mode,
 
       builder: (context, child) => ResponsiveBreakpoints.builder(
         child: child!,

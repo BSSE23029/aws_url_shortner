@@ -5,6 +5,7 @@ class PhysicsButton extends StatefulWidget {
   final Widget child;
   final VoidCallback? onPressed;
   final Color? backgroundColor;
+  final Color? textColor;
   final double? width;
   final double height;
 
@@ -13,6 +14,7 @@ class PhysicsButton extends StatefulWidget {
     required this.child,
     this.onPressed,
     this.backgroundColor,
+    this.textColor,
     this.width,
     this.height = 56,
   });
@@ -55,12 +57,19 @@ class _PhysicsButtonState extends State<PhysicsButton>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final bgColor = widget.backgroundColor ?? theme.colorScheme.primary;
+    // Screenshot Style: White BG, Black Text, Glow
+    final isEnabled = widget.onPressed != null;
+    final bgColor = isEnabled
+        ? (widget.backgroundColor ?? Colors.white)
+        : Colors.white.withValues(alpha: 0.1); // Dimmed when disabled
+
+    final txtColor = isEnabled
+        ? (widget.textColor ?? Colors.black)
+        : Colors.white.withValues(alpha: 0.3);
 
     return GestureDetector(
-      onTapDown: (_) => widget.onPressed != null ? _controller.forward() : null,
-      onTapUp: (_) => widget.onPressed != null ? _controller.reverse() : null,
+      onTapDown: (_) => isEnabled ? _controller.forward() : null,
+      onTapUp: (_) => isEnabled ? _controller.reverse() : null,
       onTapCancel: () => _controller.reverse(),
       onTap: _handlePress,
       child: AnimatedBuilder(
@@ -72,19 +81,24 @@ class _PhysicsButtonState extends State<PhysicsButton>
           height: widget.height,
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: bgColor.withValues(alpha: 0.4),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(30), // Pill shape
+            boxShadow: isEnabled
+                ? [
+                    BoxShadow(
+                      color: bgColor.withValues(
+                        alpha: 0.6,
+                      ), // Glow matches button color
+                      blurRadius: 20,
+                      spreadRadius: -2,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : [], // No shadow when disabled
           ),
           alignment: Alignment.center,
           child: DefaultTextStyle(
             style: TextStyle(
-              color: theme.colorScheme.onPrimary,
+              color: txtColor,
               fontWeight: FontWeight.w700,
               fontSize: 16,
               letterSpacing: 0.5,

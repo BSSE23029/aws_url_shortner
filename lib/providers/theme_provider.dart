@@ -4,53 +4,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // 1. The Data Model
 class ThemeSettings {
-  final Color primaryColor;
+  final ThemeMode mode; // System, Light, Dark
   final double textScale;
   final double iconScale;
-  final bool isHighContrast;
 
   const ThemeSettings({
-    this.primaryColor = const Color(0xFFFFFFFF), // Default: White/Obsidian
+    this.mode = ThemeMode.system, // Default to Device Settings
     this.textScale = 1.0,
     this.iconScale = 1.0,
-    this.isHighContrast = true,
   });
 
   ThemeSettings copyWith({
-    Color? primaryColor,
+    ThemeMode? mode,
     double? textScale,
     double? iconScale,
-    bool? isHighContrast,
   }) {
     return ThemeSettings(
-      primaryColor: primaryColor ?? this.primaryColor,
+      mode: mode ?? this.mode,
       textScale: textScale ?? this.textScale,
       iconScale: iconScale ?? this.iconScale,
-      isHighContrast: isHighContrast ?? this.isHighContrast,
     );
   }
 }
 
-// 2. The curated Cyberpunk Palette
-class AppPalettes {
-  static const Color obsidian = Color(0xFFFFFFFF);
-  static const Color cyberYellow = Color(0xFFF2FF00);
-  static const Color neonCyan = Color(0xFF00FFFF);
-  static const Color crimsonRed = Color(0xFFFF003C);
-  static const Color matrixGreen = Color(0xFF00FF41);
-  static const Color electricPurple = Color(0xFFBC13FE);
-
-  static const List<Color> all = [
-    obsidian,
-    cyberYellow,
-    neonCyan,
-    crimsonRed,
-    matrixGreen,
-    electricPurple,
-  ];
-}
-
-// 3. The Notifier
+// 2. The Notifier
 class ThemeNotifier extends StateNotifier<ThemeSettings> {
   ThemeNotifier() : super(const ThemeSettings()) {
     _loadSettings();
@@ -58,21 +35,40 @@ class ThemeNotifier extends StateNotifier<ThemeSettings> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    final colorVal = prefs.getInt('theme_color') ?? 0xFFFFFFFF;
+
+    // Load Mode (0: System, 1: Light, 2: Dark)
+    // If null, default to 0 (System)
+    final modeIndex = prefs.getInt('theme_mode') ?? 0;
+
+    ThemeMode mode = ThemeMode.system;
+    if (modeIndex == 1) mode = ThemeMode.light;
+    if (modeIndex == 2) mode = ThemeMode.dark;
+
     final tScale = prefs.getDouble('text_scale') ?? 1.0;
     final iScale = prefs.getDouble('icon_scale') ?? 1.0;
 
-    state = ThemeSettings(
-      primaryColor: Color(colorVal),
-      textScale: tScale,
-      iconScale: iScale,
-    );
+    state = ThemeSettings(mode: mode, textScale: tScale, iconScale: iScale);
   }
 
-  Future<void> updateColor(Color color) async {
-    state = state.copyWith(primaryColor: color);
+  // Cycles: System -> Light -> Dark -> System
+  Future<void> cycleTheme() async {
+    ThemeMode newMode;
+    int saveVal;
+
+    if (state.mode == ThemeMode.system) {
+      newMode = ThemeMode.light;
+      saveVal = 1;
+    } else if (state.mode == ThemeMode.light) {
+      newMode = ThemeMode.dark;
+      saveVal = 2;
+    } else {
+      newMode = ThemeMode.system;
+      saveVal = 0;
+    }
+
+    state = state.copyWith(mode: newMode);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('theme_color', color.value);
+    await prefs.setInt('theme_mode', saveVal);
   }
 
   Future<void> updateTextScale(double scale) async {

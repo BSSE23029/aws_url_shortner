@@ -20,15 +20,18 @@ class CyberScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.black, // Pure black background
+      // FIX: Use theme color instead of hardcoded black
+      backgroundColor: theme.scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: title != null || enableBack
           ? AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
               centerTitle: true,
-              iconTheme: const IconThemeData(color: Colors.white),
+              iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
               leading: enableBack && GoRouter.of(context).canPop()
                   ? IconButton(
                       icon: Icon(PhosphorIconsRegular.caretLeft),
@@ -38,10 +41,10 @@ class CyberScaffold extends StatelessWidget {
               title: title != null
                   ? Text(
                       title!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.5,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                       ),
                     )
                   : null,
@@ -50,7 +53,7 @@ class CyberScaffold extends StatelessWidget {
           : null,
       body: Stack(
         children: [
-          // 1. Subtle Radial Gradient (Optional spotlight effect at top center)
+          // 1. Subtle Radial Gradient (Dynamic based on theme)
           Positioned(
             top: -300,
             left: 0,
@@ -62,7 +65,7 @@ class CyberScaffold extends StatelessWidget {
                   center: Alignment.center,
                   radius: 0.8,
                   colors: [
-                    Colors.white.withOpacity(0.08), // Very subtle spotlight
+                    theme.colorScheme.onSurface.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                 ),
