@@ -58,6 +58,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             PhosphorIconsRegular.signOut,
             color: Theme.of(context).colorScheme.error,
           ),
+          tooltip: "Logout",
           onPressed: () {
             ref.read(authProvider.notifier).signOut();
             context.go('/signin');

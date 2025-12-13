@@ -53,7 +53,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         _hasUppercase = pass.contains(RegExp(r'[A-Z]'));
         _hasLowercase = pass.contains(RegExp(r'[a-z]'));
         _hasDigits = pass.contains(RegExp(r'[0-9]'));
-        _hasSpecial = pass.contains(RegExp(r'[!@#\$&*~]'));
+        // FIX: Comprehensive regex for all special characters including comma
+        _hasSpecial = pass.contains(
+          RegExp(r'[!@#\$%^&*(),.?":{}|<>_+\-=\[\]\\/`~;]'),
+        );
       });
       _validateForm();
     });

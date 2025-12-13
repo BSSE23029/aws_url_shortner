@@ -38,7 +38,8 @@ class ThemeNotifier extends StateNotifier<ThemeSettings> {
 
     // Load Mode (0: System, 1: Light, 2: Dark)
     // If null, default to 0 (System)
-    final modeIndex = prefs.getInt('theme_mode') ?? 0;
+    // final modeIndex = prefs.getInt('theme_mode') ?? 0;
+    final modeIndex = prefs.getInt('theme_mode') ?? 1;
 
     ThemeMode mode = ThemeMode.system;
     if (modeIndex == 1) mode = ThemeMode.light;
