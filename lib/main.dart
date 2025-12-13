@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 import 'theme/app_theme.dart';
 import 'providers/providers.dart';
-import 'screens/auth/sign_in_screen.dart';
-import 'screens/auth/sign_up_screen.dart';
-import 'screens/auth/mfa_screen.dart';
-import 'screens/auth/forgot_password_screen.dart';
-import 'screens/dashboard/dashboard_screen.dart';
-import 'screens/url/create_url_screen.dart';
-import 'screens/url/url_details_screen.dart';
-import 'screens/url/all_urls_screen.dart';
-import 'screens/error/waf_blocked_screen.dart';
 import 'models/models.dart';
+
+// CORRECT IMPORTS FOR YOUR FOLDER STRUCTURE
+import 'ui/screens/auth/sign_in_screen.dart';
+import 'ui/screens/auth/sign_up_screen.dart';
+import 'ui/screens/auth/mfa_screen.dart';
+import 'ui/screens/auth/forgot_password_screen.dart';
+import 'ui/screens/dashboard/dashboard_screen.dart';
+import 'ui/screens/url/create_url_screen.dart';
+import 'ui/screens/url/url_details_screen.dart';
+import 'ui/screens/url/all_urls_screen.dart';
+import 'ui/screens/error/waf_blocked_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: UrlShortenerApp()));
@@ -23,81 +26,64 @@ class UrlShortenerApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = _createRouter(ref);
-
     return MaterialApp.router(
       title: 'AWS URL Shortener',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      routerConfig: router,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark, // Force Dark mode for the cyber aesthetic
+
+      builder: (context, child) => ResponsiveBreakpoints.builder(
+        child: child!,
+        breakpoints: [
+          const Breakpoint(start: 0, end: 450, name: MOBILE),
+          const Breakpoint(start: 451, end: 800, name: TABLET),
+          const Breakpoint(start: 801, end: 1920, name: DESKTOP),
+        ],
+      ),
+      routerConfig: _router(ref),
     );
   }
 
-  GoRouter _createRouter(WidgetRef ref) {
-    return GoRouter(
-      initialLocation: '/signin',
-      routes: [
-        GoRoute(
-          path: '/signin',
-          builder: (context, state) => const SignInScreen(),
-        ),
-        GoRoute(
-          path: '/signup',
-          builder: (context, state) => const SignUpScreen(),
-        ),
-        GoRoute(path: '/mfa', builder: (context, state) => const MfaScreen()),
-        GoRoute(
-          path: '/forgot-password',
-          builder: (context, state) => const ForgotPasswordScreen(),
-        ),
-        GoRoute(
-          path: '/dashboard',
-          builder: (context, state) => const DashboardScreen(),
-        ),
-        GoRoute(
-          path: '/create-url',
-          builder: (context, state) => const CreateUrlScreen(),
-        ),
-        GoRoute(
-          path: '/all-urls',
-          builder: (context, state) => const AllUrlsScreen(),
-        ),
-        GoRoute(
-          path: '/url-details',
-          builder: (context, state) {
-            final url = state.extra as UrlModel?;
-            if (url == null) {
-              return const DashboardScreen();
-            }
-            return UrlDetailsScreen(url: url);
-          },
-        ),
-        GoRoute(
-          path: '/waf-blocked',
-          builder: (context, state) => const WafBlockedScreen(),
-        ),
-      ],
-      redirect: (context, state) {
-        final authState = ref.read(authProvider);
-        final isAuthenticated = authState.isAuthenticated;
-        final isOnAuthPage =
-            state.matchedLocation == '/signin' ||
-            state.matchedLocation == '/signup' ||
-            state.matchedLocation == '/mfa' ||
-            state.matchedLocation == '/forgot-password';
+  GoRouter _router(WidgetRef ref) => GoRouter(
+    initialLocation: '/signin',
+    routes: [
+      GoRoute(path: '/signin', builder: (_, __) => const SignInScreen()),
+      GoRoute(path: '/signup', builder: (_, __) => const SignUpScreen()),
+      GoRoute(path: '/mfa', builder: (_, __) => const MfaScreen()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
+      GoRoute(path: '/create-url', builder: (_, __) => const CreateUrlScreen()),
+      GoRoute(path: '/all-urls', builder: (_, __) => const AllUrlsScreen()),
+      GoRoute(
+        path: '/waf-blocked',
+        builder: (_, __) => const WafBlockedScreen(),
+      ),
+      GoRoute(
+        path: '/url-details',
+        builder: (_, state) {
+          final url = state.extra as UrlModel?;
+          return url != null
+              ? UrlDetailsScreen(url: url)
+              : const DashboardScreen();
+        },
+      ),
+    ],
+    redirect: (context, state) {
+      final auth = ref.read(authProvider);
+      final isAuth = auth.isAuthenticated;
+      final isAuthRoute =
+          state.matchedLocation.startsWith('/signin') ||
+          state.matchedLocation.startsWith('/signup') ||
+          state.matchedLocation.startsWith('/mfa') ||
+          state.matchedLocation.startsWith('/forgot-password');
 
-        // Redirect to dashboard if authenticated and on auth page
-        if (isAuthenticated && isOnAuthPage) {
-          return '/dashboard';
-        }
-
-        // Redirect to signin if not authenticated and not on auth page
-        if (!isAuthenticated && !isOnAuthPage) {
-          return '/signin';
-        }
-
-        return null; // No redirect needed
-      },
-    );
-  }
+      if (isAuth && isAuthRoute) return '/dashboard';
+      if (!isAuth && !isAuthRoute) return '/signin';
+      return null;
+    },
+  );
 }

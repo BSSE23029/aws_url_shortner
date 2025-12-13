@@ -47,6 +47,19 @@ dependencies:
   # Routing
   go_router: ^14.6.2
 
+# The Visual Engine
+  flex_color_scheme: ^8.4.0
+  google_fonts: ^6.1.0
+  flutter_animate: ^4.5.0  # The timeline orchestrator
+  glassmorphism: ^3.0.0    # Shortcut for glass (optional, but we'll likely build custom)
+  
+  # Physics & Interaction
+  flutter_physics: ^0.0.3  # For spring simulations
+  
+  # Icons & Assets
+  phosphor_flutter: ^2.1.0 # Better, more consistent icons than Material
+  responsive_framework: ^1.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
