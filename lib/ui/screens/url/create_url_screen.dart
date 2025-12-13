@@ -34,6 +34,9 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final txtColor = theme.colorScheme.onSurface;
+
     return CyberScaffold(
       title: "NEW DEPLOYMENT",
       body: Center(
@@ -51,7 +54,7 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
                     Icon(
                       PhosphorIconsThin.rocketLaunch,
                       size: 64,
-                      color: Colors.white,
+                      color: txtColor,
                     ),
                     const SizedBox(height: 32),
                     StealthInput(
@@ -66,16 +69,13 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
                         Switch(
                           value: _useCustomCode,
                           onChanged: (v) => setState(() => _useCustomCode = v),
-                          activeColor: Colors.black,
-                          activeTrackColor: Colors.white,
-                          inactiveThumbColor: Colors.white54,
-                          inactiveTrackColor: Colors.white10,
+                          activeColor: theme.scaffoldBackgroundColor,
+                          activeTrackColor: txtColor,
+                          inactiveThumbColor: txtColor.withValues(alpha: 0.5),
+                          inactiveTrackColor: txtColor.withValues(alpha: 0.1),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
-                          "Custom Alias",
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        Text("Custom Alias", style: TextStyle(color: txtColor)),
                       ],
                     ),
                     if (_useCustomCode) ...[
@@ -91,13 +91,11 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
                       onPressed: ref.watch(urlsProvider).isLoading
                           ? null
                           : _submit,
-                      backgroundColor: Colors.white,
                       child: ref.watch(urlsProvider).isLoading
-                          ? const CircularProgressIndicator(color: Colors.black)
-                          : const Text(
-                              "INITIALIZE",
-                              style: TextStyle(color: Colors.black),
-                            ),
+                          ? CircularProgressIndicator(
+                              color: theme.scaffoldBackgroundColor,
+                            )
+                          : const Text("INITIALIZE"),
                     ),
                   ],
                 ),

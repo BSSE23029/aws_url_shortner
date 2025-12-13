@@ -59,7 +59,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // FIX: Safe listener inside build
     ref.listen(authProvider, (previous, next) {
       if (next.isAuthenticated) {
         context.go('/dashboard');
@@ -75,6 +74,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       }
     });
 
+    final theme = Theme.of(context);
+    final txtColor = theme.colorScheme.onSurface;
+
     return CyberScaffold(
       enableBack: false,
       body: Center(
@@ -82,9 +84,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              const Text(
+              Text(
                 'Welcome Back',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w500,
+                  color: txtColor,
+                ),
               ),
               const SizedBox(height: 40),
 
@@ -107,7 +113,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       StealthInput(
                         label: "Password",
                         icon: PhosphorIconsRegular.lockKey,
-                        isObscure: true,
+                        isPassword: true, // Show Eye
                         controller: _passwordController,
                         focusNode: _passwordFocus,
                         textInputAction: TextInputAction.done,
@@ -121,9 +127,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           child: Text(
                             'Forgot Password?',
                             style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: txtColor.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -141,9 +145,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                  color: Theme.of(
-                                    context,
-                                  ).scaffoldBackgroundColor,
+                                  color: theme.scaffoldBackgroundColor,
                                   strokeWidth: 2,
                                 ),
                               )
@@ -159,11 +161,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 onPressed: () => context.push('/signup'),
                 child: Text(
                   'Create an Account',
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
+                  style: TextStyle(color: txtColor.withValues(alpha: 0.6)),
                 ),
               ),
             ],

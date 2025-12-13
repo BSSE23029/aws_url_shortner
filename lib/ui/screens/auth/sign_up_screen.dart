@@ -28,6 +28,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   bool _acceptTerms = false;
   bool _isValid = false;
+
+  // Validation State
+  bool _hasMinLength = false;
+  bool _hasUppercase = false;
+  bool _hasLowercase = false;
+  bool _hasDigits = false;
+  bool _hasSpecial = false;
+
   final _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
   @override
@@ -35,17 +43,37 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     super.initState();
     _nameController.addListener(_validateForm);
     _emailController.addListener(_validateForm);
-    _passwordController.addListener(_validateForm);
     _confirmController.addListener(_validateForm);
+
+    // Listen to password specifically for the requirements list
+    _passwordController.addListener(() {
+      final pass = _passwordController.text;
+      setState(() {
+        _hasMinLength = pass.length >= 8;
+        _hasUppercase = pass.contains(RegExp(r'[A-Z]'));
+        _hasLowercase = pass.contains(RegExp(r'[a-z]'));
+        _hasDigits = pass.contains(RegExp(r'[0-9]'));
+        _hasSpecial = pass.contains(RegExp(r'[!@#\$&*~]'));
+      });
+      _validateForm();
+    });
   }
 
   void _validateForm() {
     final nameValid = _nameController.text.length >= 2;
     final emailValid = _emailRegex.hasMatch(_emailController.text);
-    final passValid = _passwordController.text.length >= 8;
+    // All password rules must pass
+    final passValid =
+        _hasMinLength &&
+        _hasUppercase &&
+        _hasLowercase &&
+        _hasDigits &&
+        _hasSpecial;
     final matchValid = _passwordController.text == _confirmController.text;
+
     final newState =
         nameValid && emailValid && passValid && matchValid && _acceptTerms;
+
     if (_isValid != newState) setState(() => _isValid = newState);
   }
 
@@ -63,7 +91,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // FIX: Safe Listener
     ref.listen(authProvider, (previous, next) {
       if (next.confirmationRequired) context.push('/mfa');
       if (next.errorMessage != null &&
@@ -85,9 +112,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 'Create Account',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w500,
+                  color: txtColor,
+                ),
               ),
               const SizedBox(height: 40),
 
@@ -117,22 +148,39 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             FocusScope.of(context).requestFocus(_passFocus),
                       ),
                       const SizedBox(height: 16),
+
+                      // PASSWORD INPUT
                       StealthInput(
-                        label: "Password (Min 8 chars)",
+                        label: "Password",
                         icon: PhosphorIconsRegular.lockKey,
                         controller: _passwordController,
-                        isObscure: true,
+                        isPassword: true, // Show Eye Icon
                         focusNode: _passFocus,
                         textInputAction: TextInputAction.next,
                         onSubmitted: (_) =>
                             FocusScope.of(context).requestFocus(_confirmFocus),
                       ),
+
+                      // REQUIREMENTS LIST
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _buildRequirement("8+ Chars", _hasMinLength, theme),
+                          _buildRequirement("Uppercase", _hasUppercase, theme),
+                          _buildRequirement("Lowercase", _hasLowercase, theme),
+                          _buildRequirement("Number", _hasDigits, theme),
+                          _buildRequirement("Symbol", _hasSpecial, theme),
+                        ],
+                      ),
+
                       const SizedBox(height: 16),
                       StealthInput(
                         label: "Confirm Password",
                         icon: PhosphorIconsRegular.lockKeyOpen,
                         controller: _confirmController,
-                        isObscure: true,
+                        isPassword: true,
                         focusNode: _confirmFocus,
                         textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _handleSubmit(),
@@ -169,11 +217,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                   : null,
                             ),
                             const SizedBox(width: 12),
-                            Text(
-                              'I accept the Terms & Privacy Policy',
-                              style: TextStyle(
-                                color: txtColor.withValues(alpha: 0.7),
-                                fontSize: 14,
+                            Expanded(
+                              child: Text(
+                                'I accept the Terms & Privacy Policy',
+                                style: TextStyle(
+                                  color: txtColor.withValues(alpha: 0.7),
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ],
@@ -215,6 +265,32 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRequirement(String label, bool met, ThemeData theme) {
+    final color = met
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface.withValues(alpha: 0.3);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          met ? Icons.check_circle : Icons.circle_outlined,
+          size: 12,
+          color: color,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(width: 8),
+      ],
     );
   }
 }

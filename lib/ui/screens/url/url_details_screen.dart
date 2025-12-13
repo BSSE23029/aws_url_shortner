@@ -13,11 +13,17 @@ class UrlDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final txtColor = theme.colorScheme.onSurface;
+
     return CyberScaffold(
       title: "TELEMETRY",
       actions: [
         IconButton(
-          icon: Icon(PhosphorIconsRegular.trash, color: Colors.red),
+          icon: Icon(
+            PhosphorIconsRegular.trash,
+            color: theme.colorScheme.error,
+          ),
           onPressed: () {
             ref.read(urlsProvider.notifier).deleteUrl(url.id);
             context.pop();
@@ -34,29 +40,29 @@ class UrlDetailsScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: txtColor,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
                       PhosphorIconsRegular.qrCode,
                       size: 120,
-                      color: Colors.black,
+                      color: theme.scaffoldBackgroundColor,
                     ),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     url.shortUrl,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: txtColor,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     url.originalUrl,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white54),
+                    style: TextStyle(color: txtColor.withValues(alpha: 0.6)),
                   ),
                 ],
               ),
@@ -65,11 +71,16 @@ class UrlDetailsScreen extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildDetailStat("Total Clicks", "${url.clickCount}"),
+                  child: _buildDetailStat(
+                    context,
+                    "Total Clicks",
+                    "${url.clickCount}",
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildDetailStat(
+                    context,
                     "Created",
                     "${url.createdAt.day}/${url.createdAt.month}",
                   ),
@@ -82,22 +93,26 @@ class UrlDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDetailStat(String label, String value) {
+  Widget _buildDetailStat(BuildContext context, String label, String value) {
+    final txtColor = Theme.of(context).colorScheme.onSurface;
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: txtColor,
             ),
           ),
           Text(
             label,
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+            style: TextStyle(
+              color: txtColor.withValues(alpha: 0.5),
+              fontSize: 12,
+            ),
           ),
         ],
       ),

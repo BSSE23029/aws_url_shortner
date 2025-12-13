@@ -1,57 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-class StealthInput extends StatelessWidget {
+class StealthInput extends StatefulWidget {
   final String label;
   final IconData icon;
   final TextEditingController? controller;
-  final bool isObscure;
+  final bool isPassword;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
-
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final void Function(String)? onSubmitted;
+  final void Function(String)? onChanged; // Added for live validation
 
   const StealthInput({
     super.key,
     required this.label,
     required this.icon,
     this.controller,
-    this.isObscure = false,
+    this.isPassword = false,
     this.validator,
     this.keyboardType,
     this.focusNode,
     this.textInputAction,
     this.onSubmitted,
+    this.onChanged,
   });
+
+  @override
+  State<StealthInput> createState() => _StealthInputState();
+}
+
+class _StealthInputState extends State<StealthInput> {
+  late bool _obscureText;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscureText = widget.isPassword;
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    // The "Ink" Color (White on Dark, Black on Light)
-    final mainColor = isDark ? Colors.white : Colors.black;
+    // Dynamic Ink Color (Black in Light Mode, White in Dark Mode)
+    final mainColor = theme.colorScheme.onSurface;
 
     return TextFormField(
-      controller: controller,
-      focusNode: focusNode,
-      obscureText: isObscure,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      onFieldSubmitted: onSubmitted,
+      controller: widget.controller,
+      focusNode: widget.focusNode,
+      obscureText: _obscureText,
+      keyboardType: widget.keyboardType,
+      textInputAction: widget.textInputAction,
+      onFieldSubmitted: widget.onSubmitted,
+      onChanged: widget.onChanged,
       style: TextStyle(color: mainColor, fontSize: 16),
       cursorColor: mainColor,
       decoration: InputDecoration(
-        labelText: label,
+        labelText: widget.label,
         labelStyle: TextStyle(color: mainColor.withValues(alpha: 0.5)),
         prefixIcon: Icon(
-          icon,
+          widget.icon,
           color: mainColor.withValues(alpha: 0.7),
           size: 22,
         ),
 
-        // Stealth Borders (Dynamic)
+        // The Eye Toggle
+        suffixIcon: widget.isPassword
+            ? IconButton(
+                icon: Icon(
+                  _obscureText
+                      ? PhosphorIconsRegular.eye
+                      : PhosphorIconsRegular.eyeSlash,
+                  color: mainColor.withValues(alpha: 0.5),
+                ),
+                onPressed: () => setState(() => _obscureText = !_obscureText),
+              )
+            : null,
+
+        // Stealth Borders
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -77,7 +104,7 @@ class StealthInput extends StatelessWidget {
           horizontal: 16,
         ),
       ),
-      validator: validator,
+      validator: widget.validator,
     );
   }
 }
