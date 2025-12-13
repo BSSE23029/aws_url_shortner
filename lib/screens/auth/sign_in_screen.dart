@@ -25,13 +25,22 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     super.dispose();
   }
 
+  // Future<void> _handleSignIn() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     await ref
+  //         .read(authProvider.notifier)
+  //         .signIn(_emailController.text, _passwordController.text);
+  //   }
+  // }
   Future<void> _handleSignIn() async {
-    if (_formKey.currentState!.validate()) {
-      await ref
-          .read(authProvider.notifier)
-          .signIn(_emailController.text, _passwordController.text);
-    }
+  if (_formKey.currentState!.validate()) {
+    await ref
+        .read(authProvider.notifier)
+        .signIn(_emailController.text, _passwordController.text);
   }
+}
+
+
 
   @override
   void initState() {

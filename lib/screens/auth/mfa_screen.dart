@@ -12,74 +12,68 @@ class MfaScreen extends ConsumerStatefulWidget {
 }
 
 class _MfaScreenState extends ConsumerState<MfaScreen> {
-  final List<TextEditingController> _controllers = List.generate(
-    6,
-    (index) => TextEditingController(),
-  );
-  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
+  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   @override
   void initState() {
     super.initState();
-    // Auto-focus first field
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNodes[0].requestFocus();
 
-      // Listen to auth state
       ref.listenManual(authProvider, (previous, next) {
+        // CASE 1: Successfully Authenticated (MFA done)
         if (next.isAuthenticated) {
           context.go('/dashboard');
-        } else if (next.errorMessage != null) {
+        } 
+        // CASE 2: Account Verified (Signup Confirmation done)
+        else if (previous?.confirmationRequired == true && !next.confirmationRequired && next.errorMessage == null) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Verification successful! Please sign in.'), backgroundColor: AppTheme.success),
+          );
+          context.go('/signin');
+        }
+        // CASE 3: Error
+        else if (next.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(next.errorMessage!),
-              backgroundColor: AppTheme.error,
-            ),
+            SnackBar(content: Text(next.errorMessage!), backgroundColor: AppTheme.error),
           );
         }
       });
     });
   }
 
-  @override
-  void dispose() {
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
-    for (var node in _focusNodes) {
-      node.dispose();
-    }
-    super.dispose();
-  }
-
   Future<void> _handleVerify() async {
     final code = _controllers.map((c) => c.text).join();
-    if (code.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter all 6 digits'),
-          backgroundColor: AppTheme.error,
-        ),
-      );
-      return;
-    }
+    if (code.length != 6) return;
 
-    await ref.read(authProvider.notifier).verifyMfa(code);
+    final authState = ref.read(authProvider);
+
+    if (authState.confirmationRequired) {
+      // SIGN UP FLOW: Verify Email
+      await ref.read(authProvider.notifier).confirmAccount(code);
+    } else {
+      // LOGIN FLOW: Verify MFA
+      await ref.read(authProvider.notifier).verifyMfa(code);
+    }
   }
 
-  void _handleResendCode() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Verification code sent to your device'),
-        backgroundColor: AppTheme.success,
-      ),
-    );
+  Future<void> _handleResendCode() async {
+    await ref.read(authProvider.notifier).resendCode();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Code resent if email is valid.'), backgroundColor: AppTheme.accentTeal),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Check mode to change title
+    final isSignupVerification = ref.watch(authProvider).confirmationRequired;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Two-Factor Authentication')),
+      appBar: AppBar(title: Text(isSignupVerification ? 'Verify Email' : 'Two-Factor Authentication')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -87,38 +81,28 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 450),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Icon
-                  Container(
+                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.skyBlue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.security,
-                      size: 64,
-                      color: AppTheme.accentTeal,
-                    ),
+                    decoration: BoxDecoration(color: AppTheme.skyBlue, shape: BoxShape.circle),
+                    child: Icon(Icons.mark_email_read, size: 64, color: AppTheme.accentTeal),
                   ),
                   const SizedBox(height: 24),
-
-                  // Title
+                  
                   Text(
-                    'Enter Verification Code',
+                    isSignupVerification ? 'Verify Your Account' : 'Security Check',
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Please enter the 6-digit code from your authenticator app',
+                    'Enter the 6-digit code sent to ${ref.watch(authProvider).tempEmail ?? "your email"}',
                     style: Theme.of(context).textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
 
-                  // MFA Input Fields
+                  // Input Fields (Keep existing logic for focus jumping)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(6, (index) {
@@ -130,25 +114,11 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           maxLength: 1,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                          decoration: InputDecoration(
-                            counterText: '',
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          decoration: InputDecoration(counterText: '', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
                           onChanged: (value) {
-                            if (value.length == 1 && index < 5) {
-                              _focusNodes[index + 1].requestFocus();
-                            } else if (value.isEmpty && index > 0) {
-                              _focusNodes[index - 1].requestFocus();
-                            } else if (value.length == 1 && index == 5) {
-                              // Auto-verify when last digit is entered
-                              _handleVerify();
-                            }
+                            if (value.length == 1 && index < 5) _focusNodes[index + 1].requestFocus();
+                            if (value.isEmpty && index > 0) _focusNodes[index - 1].requestFocus();
+                            if (value.length == 1 && index == 5) _handleVerify();
                           },
                         ),
                       );
@@ -156,40 +126,27 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Verify Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: ref.watch(authProvider).isLoading
-                          ? null
-                          : _handleVerify,
+                      onPressed: ref.watch(authProvider).isLoading ? null : _handleVerify,
                       child: ref.watch(authProvider).isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
+                          ? const CircularProgressIndicator(color: Colors.white)
                           : const Text('Verify'),
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // Resend Code
                   TextButton(
                     onPressed: _handleResendCode,
                     child: const Text('Resend Code'),
                   ),
-
-                  // Back to Sign In
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Back to Sign In'),
-                  ),
+                  
+                  if (isSignupVerification)
+                    TextButton(
+                      onPressed: () => context.go('/signup'), // Go back to fix email if wrong
+                      child: const Text('Change Email'),
+                    ),
                 ],
               ),
             ),

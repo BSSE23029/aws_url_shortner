@@ -39,35 +39,28 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             password: _passwordController.text,
             name: _nameController.text,
           );
-
-      final authState = ref.read(authProvider);
-      if (authState.errorMessage == null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Account created! Please check your email to verify.',
-            ),
-            backgroundColor: AppTheme.success,
-          ),
-        );
-        context.pop();
-      } else if (authState.errorMessage != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authState.errorMessage!),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
-    } else if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the Terms & Conditions'),
-          backgroundColor: AppTheme.error,
-        ),
-      );
     }
+    // Note: No snackbar/navigation here. We listen to state changes below.
   }
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to Auth State
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.listenManual(authProvider, (previous, next) {
+        if (next.confirmationRequired) {
+          // Success! Go to verification screen
+          context.push('/mfa'); 
+        } else if (next.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(next.errorMessage!), backgroundColor: AppTheme.error),
+          );
+        }
+      });
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
