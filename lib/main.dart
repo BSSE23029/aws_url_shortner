@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'theme/app_theme.dart';
+import 'providers/theme_provider.dart';
 import 'providers/providers.dart';
 import 'models/models.dart';
 
-// CORRECT IMPORTS FOR YOUR FOLDER STRUCTURE
+// Screens
 import 'ui/screens/auth/sign_in_screen.dart';
 import 'ui/screens/auth/sign_up_screen.dart';
 import 'ui/screens/auth/mfa_screen.dart';
@@ -16,6 +17,7 @@ import 'ui/screens/url/create_url_screen.dart';
 import 'ui/screens/url/url_details_screen.dart';
 import 'ui/screens/url/all_urls_screen.dart';
 import 'ui/screens/error/waf_blocked_screen.dart';
+import 'ui/screens/settings/appearance_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: UrlShortenerApp()));
@@ -26,12 +28,16 @@ class UrlShortenerApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch Theme Changes
+    final themeSettings = ref.watch(themeProvider);
+
     return MaterialApp.router(
       title: 'AWS URL Shortener',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.dark, // Force Dark mode for the cyber aesthetic
+
+      // Inject Dynamic Theme
+      theme: AppTheme.generateDark(themeSettings),
+      themeMode: ThemeMode.dark, // Force Dark for Obsidian look
 
       builder: (context, child) => ResponsiveBreakpoints.builder(
         child: child!,
@@ -58,6 +64,10 @@ class UrlShortenerApp extends ConsumerWidget {
       GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
       GoRoute(path: '/create-url', builder: (_, __) => const CreateUrlScreen()),
       GoRoute(path: '/all-urls', builder: (_, __) => const AllUrlsScreen()),
+      GoRoute(
+        path: '/appearance',
+        builder: (_, __) => const AppearanceScreen(),
+      ),
       GoRoute(
         path: '/waf-blocked',
         builder: (_, __) => const WafBlockedScreen(),

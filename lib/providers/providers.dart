@@ -3,10 +3,8 @@ import '../middleware/api_client.dart';
 import '../models/models.dart';
 import '../config.dart';
 
-// API Client Provider
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 
-// --- AUTHENTICATION STATE ---
 class AuthState {
   final UserModel? user;
   final String? token;
@@ -37,10 +35,11 @@ class AuthState {
     bool? requiresMfa,
     bool? confirmationRequired,
     String? tempEmail,
+    bool clearUser = false, // Magic flag to force logout
   }) {
     return AuthState(
-      user: user ?? this.user,
-      token: token ?? this.token,
+      user: clearUser ? null : (user ?? this.user),
+      token: clearUser ? null : (token ?? this.token),
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
       requiresMfa: requiresMfa ?? this.requiresMfa,
@@ -56,11 +55,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._apiClient) : super(AuthState());
 
   Future<void> signIn(String email, String password) async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-      tempEmail: email,
-    );
+    // Reset any previous errors or stuck states before starting
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
     final response = await _apiClient.signIn(email, password);
 
     if (response.success && response.data != null) {
@@ -166,6 +163,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void signOut() {
     _apiClient.clearAuthToken();
+    // COMPLETE RESET
     state = AuthState();
   }
 }
@@ -178,7 +176,7 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
 class UrlsState {
   final List<UrlModel> urls;
   final bool isLoading;
-  final String? errorMessage; // Added this field
+  final String? errorMessage;
 
   UrlsState({this.urls = const [], this.isLoading = false, this.errorMessage});
 
@@ -204,9 +202,6 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
     final response = await _apiClient.getUrls();
 
     if (response.success && response.data != null) {
-      // Assuming response.data contains a list of URLs under 'urls' key or similar
-      // Adjust based on your actual API response structure
-      // For mock purposes:
       if (response.data is Map && response.data!['urls'] != null) {
         final List<dynamic> list = response.data!['urls'];
         final urls = list.map((e) => UrlModel.fromJson(e)).toList();
@@ -219,7 +214,6 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
     }
   }
 
-  // Added Method
   Future<void> createUrl({
     required String originalUrl,
     String? customCode,
@@ -241,16 +235,11 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
     }
   }
 
-  // Added Method
   Future<void> deleteUrl(String id) async {
-    // Optimistic delete
     final previousUrls = state.urls;
     state = state.copyWith(urls: state.urls.where((u) => u.id != id).toList());
-
     final response = await _apiClient.deleteUrl(id);
-
     if (!response.success) {
-      // Revert if failed
       state = state.copyWith(
         urls: previousUrls,
         errorMessage: response.message ?? "Failed to delete",

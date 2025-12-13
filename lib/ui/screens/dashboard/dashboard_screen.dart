@@ -32,6 +32,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       enableBack: false,
       actions: [
         IconButton(
+          icon: Icon(PhosphorIconsRegular.gear),
+          onPressed: () => context.push('/appearance'),
+        ),
+        IconButton(
           icon: Icon(PhosphorIconsRegular.signOut, color: Colors.white),
           onPressed: () {
             ref.read(authProvider.notifier).signOut();
