@@ -57,15 +57,26 @@ class _PhysicsButtonState extends State<PhysicsButton>
 
   @override
   Widget build(BuildContext context) {
-    // Screenshot Style: White BG, Black Text, Glow
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isEnabled = widget.onPressed != null;
+
+    // AUTO-INVERT LOGIC
+    // If no color provided:
+    // Dark Mode -> White Button
+    // Light Mode -> Black Button
+    final defaultBg = isDark ? Colors.white : Colors.black;
+    final defaultTxt = isDark ? Colors.black : Colors.white;
+
     final bgColor = isEnabled
-        ? (widget.backgroundColor ?? Colors.white)
-        : Colors.white.withValues(alpha: 0.1); // Dimmed when disabled
+        ? (widget.backgroundColor ?? defaultBg)
+        : defaultBg.withValues(alpha: 0.1);
 
     final txtColor = isEnabled
-        ? (widget.textColor ?? Colors.black)
-        : Colors.white.withValues(alpha: 0.3);
+        ? (widget.textColor ?? defaultTxt)
+        : defaultBg.withValues(
+            alpha: 0.3,
+          ); // Use bg color for disabled text ref
 
     return GestureDetector(
       onTapDown: (_) => isEnabled ? _controller.forward() : null,
@@ -81,19 +92,17 @@ class _PhysicsButtonState extends State<PhysicsButton>
           height: widget.height,
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(30), // Pill shape
+            borderRadius: BorderRadius.circular(30),
             boxShadow: isEnabled
                 ? [
                     BoxShadow(
-                      color: bgColor.withValues(
-                        alpha: 0.6,
-                      ), // Glow matches button color
+                      color: bgColor.withValues(alpha: 0.3),
                       blurRadius: 20,
                       spreadRadius: -2,
                       offset: const Offset(0, 8),
                     ),
                   ]
-                : [], // No shadow when disabled
+                : [],
           ),
           alignment: Alignment.center,
           child: DefaultTextStyle(

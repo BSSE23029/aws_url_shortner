@@ -4,52 +4,84 @@ import 'package:flutter/material.dart';
 class GlassCard extends StatelessWidget {
   final Widget child;
   final double? width;
+  final double? height;
+  final double blur;
+  final double opacity;
   final EdgeInsetsGeometry padding;
+  final BorderRadius? borderRadius;
   final VoidCallback? onTap;
+  final Color? customColor;
+  final BoxBorder? border;
 
   const GlassCard({
     super.key,
     required this.child,
     this.width,
-    this.padding = const EdgeInsets.all(32), // More padding like screenshot
+    this.height,
+    this.blur = 25,
+    this.opacity = 0.05,
+    this.padding = const EdgeInsets.all(24),
+    this.borderRadius,
     this.onTap,
+    this.customColor,
+    this.border,
   });
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(24);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final rBorder = borderRadius ?? BorderRadius.circular(24);
+
+    // DYNAMIC COLORS
+    final glassColor =
+        customColor ??
+        (isDark
+            ? Colors.white.withValues(alpha: opacity)
+            : Colors.black.withValues(
+                alpha: opacity,
+              )); // Invert tint for light mode
+
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.15)
+        : Colors.black.withValues(alpha: 0.1); // Black border for light mode
 
     return Container(
       width: width,
+      height: height,
       decoration: BoxDecoration(
-        borderRadius: borderRadius,
-        // The "Smoked Glass" border
-        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
-        // Subtle glow/shadow behind the card
+        borderRadius: rBorder,
+        border: border ?? Border.all(color: borderColor, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black,
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 30,
-            spreadRadius: 0,
-            offset: const Offset(0, 10),
+            spreadRadius: -5,
+            offset: const Offset(0, 15),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: borderRadius,
+        borderRadius: rBorder,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            color: const Color(0xFF0A0A0A).withOpacity(0.7), // Very dark tint
-            child: Material(
-              color: Colors.transparent,
-              child: onTap != null
-                  ? InkWell(
-                      onTap: onTap,
-                      child: Padding(padding: padding, child: child),
-                    )
-                  : Padding(padding: padding, child: child),
-            ),
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: Material(
+            color: glassColor,
+            type: MaterialType.transparency,
+            child: onTap != null
+                ? InkWell(
+                    onTap: onTap,
+                    borderRadius: rBorder,
+                    // Dynamic splash colors
+                    splashColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.1,
+                    ),
+                    highlightColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.05,
+                    ),
+                    child: Padding(padding: padding, child: child),
+                  )
+                : Padding(padding: padding, child: child),
           ),
         ),
       ),

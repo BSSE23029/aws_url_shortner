@@ -8,7 +8,6 @@ class StealthInput extends StatelessWidget {
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
 
-  // Navigation & Focus Support
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final void Function(String)? onSubmitted;
@@ -28,6 +27,12 @@ class StealthInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // The "Ink" Color (White on Dark, Black on Light)
+    final mainColor = isDark ? Colors.white : Colors.black;
+
     return TextFormField(
       controller: controller,
       focusNode: focusNode,
@@ -35,34 +40,36 @@ class StealthInput extends StatelessWidget {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onFieldSubmitted: onSubmitted,
-      style: const TextStyle(color: Colors.white, fontSize: 16),
-      cursorColor: Colors.white,
+      style: TextStyle(color: mainColor, fontSize: 16),
+      cursorColor: mainColor,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+        labelStyle: TextStyle(color: mainColor.withValues(alpha: 0.5)),
         prefixIcon: Icon(
           icon,
-          color: Colors.white.withValues(alpha: 0.7),
+          color: mainColor.withValues(alpha: 0.7),
           size: 22,
         ),
+
+        // Stealth Borders (Dynamic)
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.15),
+            color: mainColor.withValues(alpha: 0.15),
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.white, width: 1),
+          borderSide: BorderSide(color: mainColor, width: 1),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.red.shade900, width: 1),
+          borderSide: BorderSide(color: theme.colorScheme.error, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
+          borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
         ),
         filled: false,
         contentPadding: const EdgeInsets.symmetric(
@@ -71,7 +78,6 @@ class StealthInput extends StatelessWidget {
         ),
       ),
       validator: validator,
-      // We rely on external state for validation timing (AutoValidateMode.disabled is default)
     );
   }
 }
