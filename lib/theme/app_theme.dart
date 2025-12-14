@@ -10,7 +10,6 @@ class AppTheme {
   }) {
     final isDark = brightness == Brightness.dark;
 
-    // 1. Define the Palette
     final bgColor = isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
     final surfaceColor = isDark
         ? const Color(0xFF111111)
@@ -18,7 +17,7 @@ class AppTheme {
     final accentColor = isDark ? Colors.white : Colors.black;
     final textColor = isDark ? Colors.white : Colors.black;
 
-    // 2. Base Theme (Fixed for v8.0 compatibility)
+    // Base Theme
     final base = isDark
         ? FlexThemeData.dark(
             scheme: FlexScheme.greys,
@@ -28,6 +27,12 @@ class AppTheme {
             onPrimary: Colors.black,
             scaffoldBackground: bgColor,
             surface: surfaceColor,
+            // FIX: Explicitly disable key color seeding to stop the warning
+            keyColors: const FlexKeyColors(
+              useKeyColors: false,
+              useSecondary: false,
+              useTertiary: false,
+            ),
             subThemesData: const FlexSubThemesData(
               defaultRadius: 12.0,
               inputDecoratorRadius: 12.0,
@@ -49,6 +54,12 @@ class AppTheme {
             onPrimary: Colors.white,
             scaffoldBackground: bgColor,
             surface: surfaceColor,
+            // FIX: Disable key colors here too
+            keyColors: const FlexKeyColors(
+              useKeyColors: false,
+              useSecondary: false,
+              useTertiary: false,
+            ),
             subThemesData: const FlexSubThemesData(
               defaultRadius: 12.0,
               inputDecoratorRadius: 12.0,
@@ -63,14 +74,13 @@ class AppTheme {
             fontFamily: GoogleFonts.inter().fontFamily,
           );
 
-    // 3. Safe Component Styling & Text Scaling
+    // Apply Scaling
     final customized = base.copyWith(
       iconTheme: base.iconTheme.copyWith(
         color: accentColor,
         size: 24.0 * settings.iconScale,
       ),
       primaryIconTheme: base.primaryIconTheme.copyWith(color: accentColor),
-
       inputDecorationTheme: InputDecorationTheme(
         labelStyle: TextStyle(color: textColor.withValues(alpha: 0.5)),
         prefixIconColor: textColor.withValues(alpha: 0.7),
@@ -88,7 +98,7 @@ class AppTheme {
       ),
     );
 
-    // 4. Manual Text Scaling (Safe calculation)
+    // Manual Text Scaling
     final s = settings.textScale;
     final t = customized.textTheme;
 
@@ -101,20 +111,8 @@ class AppTheme {
         fontSize: (t.displayMedium?.fontSize ?? 45) * s,
         color: textColor,
       ),
-      displaySmall: t.displaySmall?.copyWith(
-        fontSize: (t.displaySmall?.fontSize ?? 36) * s,
-        color: textColor,
-      ),
-      headlineLarge: t.headlineLarge?.copyWith(
-        fontSize: (t.headlineLarge?.fontSize ?? 32) * s,
-        color: textColor,
-      ),
       headlineMedium: t.headlineMedium?.copyWith(
         fontSize: (t.headlineMedium?.fontSize ?? 28) * s,
-        color: textColor,
-      ),
-      headlineSmall: t.headlineSmall?.copyWith(
-        fontSize: (t.headlineSmall?.fontSize ?? 24) * s,
         color: textColor,
       ),
       titleLarge: t.titleLarge?.copyWith(
@@ -125,10 +123,6 @@ class AppTheme {
         fontSize: (t.titleMedium?.fontSize ?? 16) * s,
         color: textColor,
       ),
-      titleSmall: t.titleSmall?.copyWith(
-        fontSize: (t.titleSmall?.fontSize ?? 14) * s,
-        color: textColor,
-      ),
       bodyLarge: t.bodyLarge?.copyWith(
         fontSize: (t.bodyLarge?.fontSize ?? 16) * s,
         color: textColor,
@@ -137,20 +131,8 @@ class AppTheme {
         fontSize: (t.bodyMedium?.fontSize ?? 14) * s,
         color: textColor,
       ),
-      bodySmall: t.bodySmall?.copyWith(
-        fontSize: (t.bodySmall?.fontSize ?? 12) * s,
-        color: textColor,
-      ),
       labelLarge: t.labelLarge?.copyWith(
         fontSize: (t.labelLarge?.fontSize ?? 14) * s,
-        color: textColor,
-      ),
-      labelMedium: t.labelMedium?.copyWith(
-        fontSize: (t.labelMedium?.fontSize ?? 12) * s,
-        color: textColor,
-      ),
-      labelSmall: t.labelSmall?.copyWith(
-        fontSize: (t.labelSmall?.fontSize ?? 11) * s,
         color: textColor,
       ),
     ).apply(fontFamily: GoogleFonts.inter().fontFamily);

@@ -1,199 +1,109 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
 import '../../widgets/physics_button.dart';
 import '../../../providers/theme_provider.dart';
 
-class AppearanceScreen extends ConsumerStatefulWidget {
+class AppearanceScreen extends ConsumerWidget {
   const AppearanceScreen({super.key});
 
   @override
-  ConsumerState<AppearanceScreen> createState() => _AppearanceScreenState();
-}
-
-class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
-  late double _tempTextScale;
-  late double _tempIconScale;
-  bool _hasChanges = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final current = ref.read(themeProvider);
-    _tempTextScale = current.textScale;
-    _tempIconScale = current.iconScale;
-  }
-
-  void _applyChanges() {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(themeProvider);
     final notifier = ref.read(themeProvider.notifier);
-    notifier.updateTextScale(_tempTextScale);
-    notifier.updateIconScale(_tempIconScale);
-    setState(() => _hasChanges = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Interface Updated"),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.onSurface;
+    final txtColor = theme.colorScheme.onSurface;
 
     return CyberScaffold(
       title: "PREFERENCES",
-      enableBack: true,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            // 1. Typography
-            _buildSectionHeader("TYPOGRAPHY SCALE", theme),
+            // 1. Toggles (Haptics / Animations)
+            _buildHeader("INTERACTION", txtColor),
             GlassCard(
+              padding: const EdgeInsets.all(0),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(
-                        PhosphorIconsBold.textT,
-                        size: 16,
-                        color: theme.disabledColor,
-                      ),
-                      Expanded(
-                        child: Slider(
-                          value: _tempTextScale,
-                          min: 0.8,
-                          max: 1.4,
-                          divisions: 6,
-                          activeColor: accentColor,
-                          inactiveColor: theme.disabledColor.withValues(
-                            alpha: 0.1,
-                          ),
-                          onChanged: (val) => setState(() {
-                            _tempTextScale = val;
-                            _hasChanges = true;
-                          }),
-                        ),
-                      ),
-                      Container(
-                        width: 50,
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          "${_tempTextScale.toStringAsFixed(1)}x",
-                          style: TextStyle(
-                            color: accentColor,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Courier',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Sample: The quick brown fox jumps over the lazy dog.",
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                      fontSize: 14 * _tempTextScale,
+                  SwitchListTile(
+                    title: Text(
+                      "Haptic Feedback",
+                      style: TextStyle(color: txtColor),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    secondary: Icon(
+                      PhosphorIconsRegular.vibrate,
+                      color: txtColor,
+                    ),
+                    value: settings.enableHaptics,
+                    activeColor: txtColor,
+                    activeTrackColor: theme.colorScheme.primary,
+                    onChanged: (val) => notifier.toggleHaptics(val),
+                  ),
+                  Divider(height: 1, color: txtColor.withValues(alpha: 0.1)),
+                  SwitchListTile(
+                    title: Text(
+                      "UI Animations",
+                      style: TextStyle(color: txtColor),
+                    ),
+                    secondary: Icon(
+                      PhosphorIconsRegular.filmStrip,
+                      color: txtColor,
+                    ),
+                    value: settings.enableAnimations,
+                    activeColor: txtColor,
+                    activeTrackColor: theme.colorScheme.primary,
+                    onChanged: (val) => notifier.toggleAnimations(val),
                   ),
                 ],
               ),
-            ).animate().slideY(begin: 0.1, delay: 100.ms).fadeIn(),
-
+            ),
             const SizedBox(height: 32),
 
-            // 2. Density / Icons
-            _buildSectionHeader("INTERFACE DENSITY", theme),
+            // 2. Sliders
+            _buildHeader("SCALING", txtColor),
             GlassCard(
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(
-                        PhosphorIconsBold.cornersIn,
-                        size: 20,
-                        color: theme.disabledColor,
-                      ),
-                      Expanded(
-                        child: Slider(
-                          value: _tempIconScale,
-                          min: 0.8,
-                          max: 1.3,
-                          divisions: 5,
-                          activeColor: accentColor,
-                          inactiveColor: theme.disabledColor.withValues(
-                            alpha: 0.1,
-                          ),
-                          onChanged: (val) => setState(() {
-                            _tempIconScale = val;
-                            _hasChanges = true;
-                          }),
-                        ),
-                      ),
-                      Container(
-                        width: 50,
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          "${_tempIconScale.toStringAsFixed(1)}x",
-                          style: TextStyle(
-                            color: accentColor,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Courier',
-                          ),
-                        ),
-                      ),
-                    ],
+                  _buildSlider(
+                    "Text Size",
+                    settings.textScale,
+                    0.8,
+                    1.4,
+                    (v) => notifier.updateTextScale(v),
+                    txtColor,
                   ),
-                  const SizedBox(height: 16),
-
-                  // MOCK TOOLBAR PREVIEW
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: theme.dividerColor),
-                      borderRadius: BorderRadius.circular(12),
-                      color: theme.colorScheme.surface.withValues(alpha: 0.5),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildMockIcon(PhosphorIconsBold.house),
-                        _buildMockIcon(PhosphorIconsBold.magnifyingGlass),
-                        _buildMockIcon(PhosphorIconsBold.bell),
-                        _buildMockIcon(PhosphorIconsBold.user),
-                      ],
-                    ),
+                  const SizedBox(height: 24),
+                  _buildSlider(
+                    "Icon Density",
+                    settings.iconScale,
+                    0.8,
+                    1.3,
+                    (v) => notifier.updateIconScale(v),
+                    txtColor,
                   ),
                 ],
               ),
-            ).animate().slideY(begin: 0.1, delay: 200.ms).fadeIn(),
+            ),
 
             const SizedBox(height: 48),
 
-            // Apply Button
+            // 3. Reset
             PhysicsButton(
-              onPressed: _hasChanges ? _applyChanges : null,
-              backgroundColor: _hasChanges
-                  ? accentColor
-                  : theme.disabledColor.withValues(alpha: 0.1),
-              textColor: _hasChanges
-                  ? theme.colorScheme.surface
-                  : theme.disabledColor,
-              child: Text(_hasChanges ? "APPLY CHANGES" : "NO CHANGES"),
+              onPressed: () async {
+                await notifier.reset();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Settings Reset to Default")),
+                  );
+                }
+              },
+              backgroundColor: theme.colorScheme.error.withValues(alpha: 0.1),
+              textColor: theme.colorScheme.error,
+              child: const Text("RESET TO DEFAULTS"),
             ),
           ],
         ),
@@ -201,16 +111,40 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
     );
   }
 
-  Widget _buildMockIcon(IconData icon) {
-    // This widget scales precisely with the slider
-    return Icon(
-      icon,
-      size: 24.0 * _tempIconScale,
-      color: Theme.of(context).colorScheme.onSurface,
+  Widget _buildSlider(
+    String label,
+    double value,
+    double min,
+    double max,
+    Function(double) onChanged,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: TextStyle(color: color.withValues(alpha: 0.7))),
+            Text(
+              "${value.toStringAsFixed(1)}x",
+              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          divisions: 5,
+          activeColor: color,
+          inactiveColor: color.withValues(alpha: 0.1),
+          onChanged: onChanged,
+        ),
+      ],
     );
   }
 
-  Widget _buildSectionHeader(String title, ThemeData theme) {
+  Widget _buildHeader(String title, Color color) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16, left: 8),
       child: Align(
@@ -218,7 +152,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
         child: Text(
           title,
           style: TextStyle(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            color: color.withValues(alpha: 0.5),
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
             fontSize: 12,

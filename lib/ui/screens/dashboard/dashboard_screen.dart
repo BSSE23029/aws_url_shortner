@@ -5,7 +5,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
 import '../../../providers/providers.dart';
-import '../../../providers/theme_provider.dart';
 import '../../../models/models.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -27,52 +26,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final urlsState = ref.watch(urlsProvider);
-    final themeMode = ref.watch(themeProvider).mode;
-    // Check if currently effectively dark
-    final isDark =
-        themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system &&
-            MediaQuery.of(context).platformBrightness == Brightness.dark);
+    final theme = Theme.of(context);
+    final txtColor = theme.colorScheme.onSurface;
 
     return CyberScaffold(
-      title: "DASHBOARD",
       enableBack: false,
-      actions: [
-        // 1. THEME TOGGLE BUTTON
-        IconButton(
-          icon: Icon(isDark ? PhosphorIconsBold.sun : PhosphorIconsBold.moon),
-          tooltip: "Cycle Theme (System/Light/Dark)",
-          onPressed: () => ref.read(themeProvider.notifier).cycleTheme(),
-        ),
-        // 2. SETTINGS BUTTON (Goes to Appearance Screen)
-        IconButton(
-          icon: Icon(PhosphorIconsBold.gear),
-          tooltip: "Settings",
-          onPressed: () => context.push('/appearance'),
-        ),
-        // 3. LOGOUT
-        IconButton(
-          icon: Icon(
-            PhosphorIconsBold.signOut,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          tooltip: "Logout",
-          onPressed: () {
-            ref.read(authProvider.notifier).signOut();
-            context.go('/signin');
-          },
-        ),
-      ],
+      // FIX: Removed actions list. The Rail handles settings/theme now.
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/create-url'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: txtColor,
+        foregroundColor: theme.scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Icon(PhosphorIconsBold.plus),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(32),
         children: [
+          Text(
+            "Overview",
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: txtColor,
+            ),
+          ),
+          const SizedBox(height: 32),
+
           Row(
             children: [
               Expanded(
@@ -81,7 +60,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   "${urlsState.urls.length}",
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 24),
               Expanded(
                 child: _buildStatCard(
                   "Total Clicks",
@@ -90,20 +69,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 32),
+
+          const SizedBox(height: 48),
+
           Text(
-            "DEPLOYMENTS",
+            "RECENT DEPLOYMENTS",
             style: TextStyle(
-              color: Theme.of(
-                context,
-              ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+              color: txtColor.withValues(alpha: 0.5),
               fontWeight: FontWeight.bold,
               letterSpacing: 2,
+              fontSize: 12,
             ),
           ),
           const SizedBox(height: 16),
+
           if (urlsState.isLoading)
-            const Center(child: CircularProgressIndicator())
+            Center(child: CircularProgressIndicator(color: txtColor))
           else if (urlsState.urls.isEmpty)
             _buildEmpty()
           else
@@ -118,29 +99,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  // Updated widgets to use Theme colors instead of hardcoded white
   Widget _buildStatCard(String label, String value) {
+    final txtColor = Theme.of(context).colorScheme.onSurface;
     return GlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             value,
             style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w300,
-              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 48,
+              fontWeight: FontWeight.w200,
+              color: txtColor,
             ),
           ),
           Text(
             label,
             style: TextStyle(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.5),
+              color: txtColor.withValues(alpha: 0.5),
               fontSize: 12,
               letterSpacing: 1,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -151,11 +131,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildUrlRow(UrlModel url) {
     final txtColor = Theme.of(context).colorScheme.onSurface;
     return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       onTap: () => context.push('/url-details', extra: url),
       child: Row(
         children: [
-          Icon(PhosphorIconsBold.link, color: txtColor.withValues(alpha: 0.5)),
+          Icon(
+            PhosphorIconsRegular.link,
+            color: txtColor.withValues(alpha: 0.5),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -166,8 +149,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: txtColor,
+                    fontSize: 16,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   url.originalUrl,
                   maxLines: 1,
@@ -187,7 +172,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           const SizedBox(width: 4),
           Icon(
-            PhosphorIconsBold.chartBar,
+            PhosphorIconsRegular.chartBar,
             size: 14,
             color: txtColor.withValues(alpha: 0.5),
           ),
@@ -197,21 +182,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildEmpty() {
+    final txtColor = Theme.of(context).disabledColor;
     return Container(
       padding: const EdgeInsets.all(40),
       alignment: Alignment.center,
       child: Column(
         children: [
-          Icon(
-            PhosphorIconsBold.ghost,
-            size: 48,
-            color: Theme.of(context).disabledColor,
-          ),
+          Icon(PhosphorIconsRegular.ghost, size: 48, color: txtColor),
           const SizedBox(height: 16),
-          Text(
-            "No active deployments",
-            style: TextStyle(color: Theme.of(context).disabledColor),
-          ),
+          Text("No active deployments", style: TextStyle(color: txtColor)),
         ],
       ),
     );

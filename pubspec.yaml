@@ -61,6 +61,8 @@ dependencies:
   responsive_framework: ^1.5.1
   shared_preferences: ^2.2.2
 
+  syncfusion_flutter_charts: ^31.2.18
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
