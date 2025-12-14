@@ -62,7 +62,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Icon(
-                        PhosphorIconsRegular.textT,
+                        PhosphorIconsBold.textT,
                         size: 16,
                         color: theme.disabledColor,
                       ),
@@ -121,7 +121,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Icon(
-                        PhosphorIconsRegular.cornersIn,
+                        PhosphorIconsBold.cornersIn,
                         size: 20,
                         color: theme.disabledColor,
                       ),
@@ -171,10 +171,10 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildMockIcon(PhosphorIconsRegular.house),
-                        _buildMockIcon(PhosphorIconsRegular.magnifyingGlass),
-                        _buildMockIcon(PhosphorIconsRegular.bell),
-                        _buildMockIcon(PhosphorIconsRegular.user),
+                        _buildMockIcon(PhosphorIconsBold.house),
+                        _buildMockIcon(PhosphorIconsBold.magnifyingGlass),
+                        _buildMockIcon(PhosphorIconsBold.bell),
+                        _buildMockIcon(PhosphorIconsBold.user),
                       ],
                     ),
                   ),

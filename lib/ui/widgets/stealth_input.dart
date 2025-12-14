@@ -61,7 +61,8 @@ class _StealthInputState extends State<StealthInput> {
         labelStyle: TextStyle(color: mainColor.withValues(alpha: 0.5)),
         prefixIcon: Icon(
           widget.icon,
-          color: mainColor.withValues(alpha: 0.7),
+          // color: mainColor.withValues(alpha: 0.7),
+          color: mainColor.withValues(alpha: 1),
           size: 22,
         ),
 
@@ -70,8 +71,8 @@ class _StealthInputState extends State<StealthInput> {
             ? IconButton(
                 icon: Icon(
                   _obscureText
-                      ? PhosphorIconsRegular.eye
-                      : PhosphorIconsRegular.eyeSlash,
+                      ? PhosphorIconsBold.eye
+                      : PhosphorIconsBold.eyeSlash,
                   color: mainColor.withValues(alpha: 0.5),
                 ),
                 onPressed: () => setState(() => _obscureText = !_obscureText),

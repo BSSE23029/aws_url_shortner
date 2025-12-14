@@ -34,7 +34,7 @@ class CyberScaffold extends StatelessWidget {
               iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
               leading: enableBack && GoRouter.of(context).canPop()
                   ? IconButton(
-                      icon: Icon(PhosphorIconsRegular.caretLeft),
+                      icon: Icon(PhosphorIconsBold.caretLeft),
                       onPressed: () => context.pop(),
                     )
                   : null,

@@ -43,7 +43,7 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
           child: Column(
             children: [
               Icon(
-                PhosphorIconsRegular.shieldCheck,
+                PhosphorIconsBold.shieldCheck,
                 size: 64,
                 color: Colors.white,
               ),

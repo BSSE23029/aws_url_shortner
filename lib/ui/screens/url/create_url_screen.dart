@@ -59,7 +59,7 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
                     const SizedBox(height: 32),
                     StealthInput(
                       label: "Target URL",
-                      icon: PhosphorIconsRegular.link,
+                      icon: PhosphorIconsBold.link,
                       controller: _urlController,
                       validator: (v) => v?.isEmpty == true ? 'Required' : null,
                     ),
@@ -82,7 +82,7 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
                       const SizedBox(height: 16),
                       StealthInput(
                         label: "Alias",
-                        icon: PhosphorIconsRegular.tag,
+                        icon: PhosphorIconsBold.tag,
                         controller: _codeController,
                       ),
                     ],

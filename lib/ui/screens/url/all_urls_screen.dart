@@ -29,7 +29,7 @@ class AllUrlsScreen extends ConsumerWidget {
                     onTap: () => context.push('/url-details', extra: url),
                     child: Row(
                       children: [
-                        Icon(PhosphorIconsRegular.link, color: Colors.white54),
+                        Icon(PhosphorIconsBold.link, color: Colors.white54),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
@@ -55,7 +55,7 @@ class AllUrlsScreen extends ConsumerWidget {
                           ),
                         ),
                         Icon(
-                          PhosphorIconsRegular.caretRight,
+                          PhosphorIconsBold.caretRight,
                           color: Colors.white24,
                         ),
                       ],

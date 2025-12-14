@@ -102,7 +102,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     children: [
                       StealthInput(
                         label: "Email",
-                        icon: PhosphorIconsRegular.envelopeSimple,
+                        icon: PhosphorIconsBold.envelopeSimple,
                         controller: _emailController,
                         focusNode: _emailFocus,
                         textInputAction: TextInputAction.next,
@@ -112,7 +112,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       const SizedBox(height: 16),
                       StealthInput(
                         label: "Password",
-                        icon: PhosphorIconsRegular.lockKey,
+                        icon: PhosphorIconsBold.lockKey,
                         isPassword: true, // Show Eye
                         controller: _passwordController,
                         focusNode: _passwordFocus,
@@ -128,6 +128,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             'Forgot Password?',
                             style: TextStyle(
                               color: txtColor.withValues(alpha: 0.6),
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -161,7 +162,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 onPressed: () => context.push('/signup'),
                 child: Text(
                   'Create an Account',
-                  style: TextStyle(color: txtColor.withValues(alpha: 0.6)),
+                  style: TextStyle(
+                    color: txtColor.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],

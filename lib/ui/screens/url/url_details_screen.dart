@@ -20,10 +20,7 @@ class UrlDetailsScreen extends ConsumerWidget {
       title: "TELEMETRY",
       actions: [
         IconButton(
-          icon: Icon(
-            PhosphorIconsRegular.trash,
-            color: theme.colorScheme.error,
-          ),
+          icon: Icon(PhosphorIconsBold.trash, color: theme.colorScheme.error),
           onPressed: () {
             ref.read(urlsProvider.notifier).deleteUrl(url.id);
             context.pop();
@@ -44,7 +41,7 @@ class UrlDetailsScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
-                      PhosphorIconsRegular.qrCode,
+                      PhosphorIconsBold.qrCode,
                       size: 120,
                       color: theme.scaffoldBackgroundColor,
                     ),

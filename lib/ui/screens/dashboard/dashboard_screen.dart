@@ -40,22 +40,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       actions: [
         // 1. THEME TOGGLE BUTTON
         IconButton(
-          icon: Icon(
-            isDark ? PhosphorIconsRegular.sun : PhosphorIconsRegular.moon,
-          ),
+          icon: Icon(isDark ? PhosphorIconsBold.sun : PhosphorIconsBold.moon),
           tooltip: "Cycle Theme (System/Light/Dark)",
           onPressed: () => ref.read(themeProvider.notifier).cycleTheme(),
         ),
         // 2. SETTINGS BUTTON (Goes to Appearance Screen)
         IconButton(
-          icon: Icon(PhosphorIconsRegular.gear),
+          icon: Icon(PhosphorIconsBold.gear),
           tooltip: "Settings",
           onPressed: () => context.push('/appearance'),
         ),
         // 3. LOGOUT
         IconButton(
           icon: Icon(
-            PhosphorIconsRegular.signOut,
+            PhosphorIconsBold.signOut,
             color: Theme.of(context).colorScheme.error,
           ),
           tooltip: "Logout",
@@ -98,7 +96,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             style: TextStyle(
               color: Theme.of(
                 context,
-              ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+              ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
               fontWeight: FontWeight.bold,
               letterSpacing: 2,
             ),
@@ -157,10 +155,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       onTap: () => context.push('/url-details', extra: url),
       child: Row(
         children: [
-          Icon(
-            PhosphorIconsRegular.link,
-            color: txtColor.withValues(alpha: 0.5),
-          ),
+          Icon(PhosphorIconsBold.link, color: txtColor.withValues(alpha: 0.5)),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -192,7 +187,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           const SizedBox(width: 4),
           Icon(
-            PhosphorIconsRegular.chartBar,
+            PhosphorIconsBold.chartBar,
             size: 14,
             color: txtColor.withValues(alpha: 0.5),
           ),
@@ -208,7 +203,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: Column(
         children: [
           Icon(
-            PhosphorIconsRegular.ghost,
+            PhosphorIconsBold.ghost,
             size: 48,
             color: Theme.of(context).disabledColor,
           ),

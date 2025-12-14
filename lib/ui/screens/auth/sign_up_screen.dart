@@ -133,7 +133,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     children: [
                       StealthInput(
                         label: "Full Name",
-                        icon: PhosphorIconsRegular.user,
+                        icon: PhosphorIconsBold.user,
                         controller: _nameController,
                         focusNode: _nameFocus,
                         textInputAction: TextInputAction.next,
@@ -143,7 +143,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       const SizedBox(height: 16),
                       StealthInput(
                         label: "Email",
-                        icon: PhosphorIconsRegular.envelopeSimple,
+                        icon: PhosphorIconsBold.envelopeSimple,
                         controller: _emailController,
                         focusNode: _emailFocus,
                         textInputAction: TextInputAction.next,
@@ -155,7 +155,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       // PASSWORD INPUT
                       StealthInput(
                         label: "Password",
-                        icon: PhosphorIconsRegular.lockKey,
+                        icon: PhosphorIconsBold.lockKey,
                         controller: _passwordController,
                         isPassword: true, // Show Eye Icon
                         focusNode: _passFocus,
@@ -181,7 +181,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       const SizedBox(height: 16),
                       StealthInput(
                         label: "Confirm Password",
-                        icon: PhosphorIconsRegular.lockKeyOpen,
+                        icon: PhosphorIconsBold.lockKeyOpen,
                         controller: _confirmController,
                         isPassword: true,
                         focusNode: _confirmFocus,
@@ -225,6 +225,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                 'I accept the Terms & Privacy Policy',
                                 style: TextStyle(
                                   color: txtColor.withValues(alpha: 0.7),
+                                  fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
                               ),
@@ -261,7 +262,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 onPressed: () => context.go('/signin'),
                 child: Text(
                   'Already have an account? Sign In',
-                  style: TextStyle(color: txtColor.withValues(alpha: 0.6)),
+                  style: TextStyle(
+                    color: txtColor.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
