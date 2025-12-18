@@ -1,0 +1,43 @@
+name: Deploy Flutter Web to S3
+
+on:
+  push:
+    branches:
+      - main # Trigger on push to main branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Setup Flutter Environment
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+
+      # 3. Install Dependencies
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # 4. Build for Web (Release Mode)
+      - name: Build Flutter Web
+        run: flutter build web --release --web-renderer html
+
+      # 5. Configure AWS Credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 6. Deploy to S3 (Syncs files and deletes old ones)
+      - name: Deploy to S3 Bucket
+        run: |
+          aws s3 sync build/web s3://${{ secrets.S3_BUCKET_NAME }} --delete
