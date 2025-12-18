@@ -30,6 +30,7 @@ class AppTheme {
             surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
             blendLevel: 0,
             primary: Colors.white,
+            primaryLightRef: Colors.black, // Reference to light theme primary
             onPrimary: Colors.black,
             scaffoldBackground: bgColor,
             surface: surfaceColor,

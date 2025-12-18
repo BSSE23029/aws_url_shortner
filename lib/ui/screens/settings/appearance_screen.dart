@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
 import '../../widgets/physics_button.dart';
+import '../../widgets/cyber_switch.dart';
 import '../../../providers/theme_provider.dart';
 
 class AppearanceScreen extends ConsumerWidget {
@@ -26,36 +27,22 @@ class AppearanceScreen extends ConsumerWidget {
             // 1. Toggles (Haptics / Animations)
             _buildHeader("INTERACTION", txtColor),
             GlassCard(
-              padding: const EdgeInsets.all(0),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Column(
                 children: [
-                  SwitchListTile(
-                    title: Text(
-                      "Haptic Feedback",
-                      style: TextStyle(color: txtColor),
-                    ),
-                    secondary: Icon(
-                      PhosphorIconsRegular.vibrate,
-                      color: txtColor,
-                    ),
+                  CyberSwitch(
+                    title: "Haptic Feedback",
+                    subtitle: "Vibration on interactions",
+                    icon: PhosphorIconsRegular.vibrate,
                     value: settings.enableHaptics,
-                    activeColor: txtColor,
-                    activeTrackColor: theme.colorScheme.primary,
                     onChanged: (val) => notifier.toggleHaptics(val),
                   ),
                   Divider(height: 1, color: txtColor.withValues(alpha: 0.1)),
-                  SwitchListTile(
-                    title: Text(
-                      "UI Animations",
-                      style: TextStyle(color: txtColor),
-                    ),
-                    secondary: Icon(
-                      PhosphorIconsRegular.filmStrip,
-                      color: txtColor,
-                    ),
+                  CyberSwitch(
+                    title: "UI Animations",
+                    subtitle: "Smooth transitions and effects",
+                    icon: PhosphorIconsRegular.filmStrip,
                     value: settings.enableAnimations,
-                    activeColor: txtColor,
-                    activeTrackColor: theme.colorScheme.primary,
                     onChanged: (val) => notifier.toggleAnimations(val),
                   ),
                 ],
@@ -97,12 +84,14 @@ class AppearanceScreen extends ConsumerWidget {
                 await notifier.reset();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Settings Reset to Default")),
+                    SnackBar(
+                      content: const Text("Settings Reset to Default"),
+                      backgroundColor: txtColor.withValues(alpha: 0.9),
+                    ),
                   );
                 }
               },
-              backgroundColor: theme.colorScheme.error.withValues(alpha: 0.1),
-              textColor: theme.colorScheme.error,
+              icon: PhosphorIconsRegular.arrowClockwise,
               child: const Text("RESET TO DEFAULTS"),
             ),
           ],

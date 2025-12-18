@@ -18,11 +18,11 @@ class SignInScreen extends ConsumerStatefulWidget {
 class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
 
   bool _isValid = false;
+  bool _rememberMe = false;
   final _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
   @override
@@ -44,31 +44,23 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     if (_isValid) {
       ref
           .read(authProvider.notifier)
-          .signIn(_emailController.text, _passwordController.text);
+          .signIn(
+            _emailController.text.trim(),
+            _passwordController.text,
+            rememberMe: _rememberMe,
+          );
     }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _emailFocus.dispose();
-    _passwordFocus.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen(authProvider, (previous, next) {
-      if (next.isAuthenticated) {
-        context.go('/dashboard');
-      }
       if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: Colors.redAccent,
           ),
         );
       }
@@ -93,7 +85,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 450),
                 child: GlassCard(
@@ -113,40 +104,66 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       StealthInput(
                         label: "Password",
                         icon: PhosphorIconsBold.lockKey,
-                        isPassword: true, // Show Eye
+                        isPassword: true,
                         controller: _passwordController,
                         focusNode: _passwordFocus,
                         textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _handleSubmit(),
                       ),
-
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () => context.push('/forgot-password'),
-                          child: Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: txtColor.withValues(alpha: 0.6),
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: Checkbox(
+                              value: _rememberMe,
+                              onChanged: (v) =>
+                                  setState(() => _rememberMe = v ?? false),
+                              activeColor: txtColor,
+                              checkColor: theme.scaffoldBackgroundColor,
+                              side: BorderSide(
+                                color: txtColor.withOpacity(0.4),
+                              ),
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: () =>
+                                setState(() => _rememberMe = !_rememberMe),
+                            child: Text(
+                              "Keep me signed in",
+                              style: TextStyle(
+                                color: txtColor.withOpacity(0.7),
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          TextButton(
+                            onPressed: () => context.push('/forgot-password'),
+                            child: Text(
+                              'Forgot?',
+                              style: TextStyle(
+                                color: txtColor.withOpacity(0.6),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-
                       const SizedBox(height: 24),
-
                       PhysicsButton(
                         onPressed:
                             _isValid && !ref.watch(authProvider).isLoading
                             ? _handleSubmit
                             : null,
                         child: ref.watch(authProvider).isLoading
-                            ? SizedBox(
+                            ? const SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                  color: theme.scaffoldBackgroundColor,
                                   strokeWidth: 2,
                                 ),
                               )
@@ -156,14 +173,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 32),
               TextButton(
                 onPressed: () => context.push('/signup'),
                 child: Text(
                   'Create an Account',
                   style: TextStyle(
-                    color: txtColor.withValues(alpha: 0.6),
+                    color: txtColor.withOpacity(0.6),
                     fontWeight: FontWeight.bold,
                   ),
                 ),

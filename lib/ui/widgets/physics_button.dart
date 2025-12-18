@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/theme_provider.dart';
 
-class PhysicsButton extends StatefulWidget {
+class PhysicsButton extends ConsumerStatefulWidget {
   final Widget child;
   final VoidCallback? onPressed;
   final Color? backgroundColor;
   final Color? textColor;
   final double? width;
   final double height;
+  final IconData? icon;
 
   const PhysicsButton({
     super.key,
@@ -17,13 +20,14 @@ class PhysicsButton extends StatefulWidget {
     this.textColor,
     this.width,
     this.height = 56,
+    this.icon,
   });
 
   @override
-  State<PhysicsButton> createState() => _PhysicsButtonState();
+  ConsumerState<PhysicsButton> createState() => _PhysicsButtonState();
 }
 
-class _PhysicsButtonState extends State<PhysicsButton>
+class _PhysicsButtonState extends ConsumerState<PhysicsButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -38,7 +42,7 @@ class _PhysicsButtonState extends State<PhysicsButton>
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: 0.95,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
   }
 
   @override
@@ -49,38 +53,43 @@ class _PhysicsButtonState extends State<PhysicsButton>
 
   Future<void> _handlePress() async {
     if (widget.onPressed == null) return;
-    await _controller.forward();
-    await HapticFeedback.lightImpact();
-    await _controller.reverse();
+
+    final settings = ref.read(themeProvider);
+
+    if (settings.enableHaptics) {
+      HapticFeedback.lightImpact();
+    }
+
+    if (settings.enableAnimations) {
+      await _controller.forward();
+      await _controller.reverse();
+    }
+
     widget.onPressed?.call();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final settings = ref.watch(themeProvider);
     final isEnabled = widget.onPressed != null;
 
-    // AUTO-INVERT LOGIC
-    // If no color provided:
-    // Dark Mode -> White Button
-    // Light Mode -> Black Button
-    final defaultBg = isDark ? Colors.white : Colors.black;
-    final defaultTxt = isDark ? Colors.black : Colors.white;
-
+    // --- SMART COLOR LOGIC ---
+    // Background: Use provided color OR the theme's "Ink" color
     final bgColor = isEnabled
-        ? (widget.backgroundColor ?? defaultBg)
-        : defaultBg.withValues(alpha: 0.1);
+        ? (widget.backgroundColor ?? theme.colorScheme.onSurface)
+        : theme.colorScheme.onSurface.withOpacity(0.1);
 
-    final txtColor = isEnabled
-        ? (widget.textColor ?? defaultTxt)
-        : defaultBg.withValues(
-            alpha: 0.3,
-          ); // Use bg color for disabled text ref
+    // Text/Icon: Use provided color OR the theme's "Paper" color (for contrast)
+    final resolvedTxtColor = isEnabled
+        ? (widget.textColor ?? theme.scaffoldBackgroundColor)
+        : theme.colorScheme.onSurface.withOpacity(0.3);
 
     return GestureDetector(
-      onTapDown: (_) => isEnabled ? _controller.forward() : null,
-      onTapUp: (_) => isEnabled ? _controller.reverse() : null,
+      onTapDown: (_) =>
+          isEnabled && settings.enableAnimations ? _controller.forward() : null,
+      onTapUp: (_) =>
+          isEnabled && settings.enableAnimations ? _controller.reverse() : null,
       onTapCancel: () => _controller.reverse(),
       onTap: _handlePress,
       child: AnimatedBuilder(
@@ -93,26 +102,37 @@ class _PhysicsButtonState extends State<PhysicsButton>
           decoration: BoxDecoration(
             color: bgColor,
             borderRadius: BorderRadius.circular(30),
-            boxShadow: isEnabled
+            boxShadow: isEnabled && isEnabled
                 ? [
                     BoxShadow(
-                      color: bgColor.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      spreadRadius: -2,
+                      color: bgColor.withOpacity(0.2),
+                      blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
                   ]
                 : [],
           ),
           alignment: Alignment.center,
-          child: DefaultTextStyle(
-            style: TextStyle(
-              color: txtColor,
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-              letterSpacing: 0.5,
+          child: IconTheme(
+            data: IconThemeData(color: resolvedTxtColor, size: 20),
+            child: DefaultTextStyle(
+              style: TextStyle(
+                color: resolvedTxtColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 0.5,
+              ),
+              child: widget.icon != null
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(widget.icon),
+                        const SizedBox(width: 10),
+                        widget.child,
+                      ],
+                    )
+                  : widget.child,
             ),
-            child: widget.child,
           ),
         ),
       ),

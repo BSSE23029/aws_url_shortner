@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/physics_button.dart';
@@ -34,7 +33,21 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
   }
 
   @override
+  void dispose() {
+    for (var c in _controllers) {
+      c.dispose();
+    }
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final txtColor = theme.colorScheme.onSurface;
+
     return CyberScaffold(
       title: "SECURITY CHECK",
       body: Center(
@@ -42,27 +55,22 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              Icon(
-                PhosphorIconsBold.shieldCheck,
-                size: 64,
-                color: Colors.white,
-              ),
+              Icon(PhosphorIconsBold.shieldCheck, size: 64, color: txtColor),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Verification Required',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: txtColor,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Enter the code sent to your email',
-                style: TextStyle(color: Colors.white54),
+                style: TextStyle(color: txtColor.withOpacity(0.6)),
               ),
               const SizedBox(height: 32),
-
               GlassCard(
                 width: 400,
                 child: Column(
@@ -79,25 +87,22 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
                             focusNode: _focusNodes[index],
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: txtColor,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
                             maxLength: 1,
-                            cursorColor: Colors.white,
                             decoration: InputDecoration(
                               counterText: '',
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                  color: txtColor.withOpacity(0.2),
                                 ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: Colors.white,
-                                ),
+                                borderSide: BorderSide(color: txtColor),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
@@ -117,25 +122,21 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
                       onPressed: ref.watch(authProvider).isLoading
                           ? null
                           : _handleVerify,
-                      backgroundColor: Colors.white,
                       child: ref.watch(authProvider).isLoading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text(
-                              'VERIFY',
-                              style: TextStyle(color: Colors.black),
-                            ),
+                          : const Text('VERIFY'),
                     ),
                     const SizedBox(height: 16),
                     TextButton(
                       onPressed: () =>
                           ref.read(authProvider.notifier).resendCode(),
-                      child: const Text(
+                      child: Text(
                         'Resend Code',
-                        style: TextStyle(color: Colors.white54),
+                        style: TextStyle(color: txtColor.withOpacity(0.6)),
                       ),
                     ),
                   ],

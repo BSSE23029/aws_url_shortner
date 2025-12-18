@@ -127,10 +127,16 @@ class _StealthRailState extends ConsumerState<StealthRail> {
 
                 // 1. Theme Toggle
                 _RailItem(
-                  icon: isDark
-                      ? PhosphorIconsRegular.sun
-                      : PhosphorIconsRegular.moon,
-                  label: isDark ? "Light Mode" : "Dark Mode",
+                  icon: themeMode == ThemeMode.system
+                      ? PhosphorIconsRegular.circleHalf
+                      : (themeMode == ThemeMode.dark
+                            ? PhosphorIconsRegular.moon
+                            : PhosphorIconsRegular.sun),
+                  label: themeMode == ThemeMode.system
+                      ? "System Default"
+                      : (themeMode == ThemeMode.dark
+                            ? "Dark Mode"
+                            : "Light Mode"),
                   isSelected: false,
                   isCompact: isCompact,
                   onTap: () => ref.read(themeProvider.notifier).cycleTheme(),

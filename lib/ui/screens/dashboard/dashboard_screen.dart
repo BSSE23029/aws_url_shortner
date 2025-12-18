@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
 import '../../../providers/providers.dart';
+import '../../../providers/theme_provider.dart';
 import '../../../models/models.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -19,9 +20,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => ref.read(urlsProvider.notifier).loadDashboard(),
-    );
+    // Only load if the list is empty to prevent theme-change re-fetches
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(urlsProvider).urls.isEmpty) {
+        ref.read(urlsProvider.notifier).loadDashboard();
+      }
+    });
   }
 
   @override
@@ -29,24 +33,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final urlsState = ref.watch(urlsProvider);
     final theme = Theme.of(context);
     final txtColor = theme.colorScheme.onSurface;
+    final enableAnims = ref.watch(themeProvider).enableAnimations;
 
     return CyberScaffold(
       enableBack: false,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          HapticFeedback.lightImpact();
-          context.push('/create-url');
-        },
+        onPressed: () => context.push('/create-url'),
         backgroundColor: txtColor,
         foregroundColor: theme.scaffoldBackgroundColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Icon(PhosphorIconsBold.plus),
-        tooltip: 'Create new URL',
+        child: const Icon(PhosphorIconsBold.plus),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(urlsProvider.notifier).loadDashboard(),
-        color: txtColor,
-        backgroundColor: theme.scaffoldBackgroundColor,
         child: ListView(
           padding: const EdgeInsets.all(32),
           children: [
@@ -59,8 +57,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 32),
-
-            // --- LOCAL vs GLOBAL STATS ---
             Row(
               children: [
                 Expanded(
@@ -81,31 +77,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: 48),
-
             Text(
               "RECENT DEPLOYMENTS",
               style: TextStyle(
-                color: txtColor.withValues(alpha: 0.5),
+                color: txtColor.withOpacity(0.5),
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
                 fontSize: 12,
               ),
             ),
             const SizedBox(height: 16),
-
             if (urlsState.isLoading && urlsState.urls.isEmpty)
               Center(child: CircularProgressIndicator(color: txtColor))
             else if (urlsState.urls.isEmpty)
-              _buildEmpty()
+              const Center(child: Text("No deployments found"))
             else
               ...urlsState.urls.asMap().entries.map((entry) {
                 final index = entry.key;
                 final url = entry.value;
                 return TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: Duration(milliseconds: 300 + (index * 50)),
+                  tween: Tween(begin: enableAnims ? 0.0 : 1.0, end: 1.0),
+                  duration: enableAnims
+                      ? Duration(milliseconds: 300 + (index * 50))
+                      : Duration.zero,
                   curve: Curves.easeOutCubic,
                   builder: (context, value, child) {
                     return Opacity(
@@ -137,29 +132,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final txtColor = Theme.of(context).colorScheme.onSurface;
     return GlassCard(
       padding: const EdgeInsets.all(24),
-      customColor: isGlobal ? Colors.purple.withValues(alpha: 0.05) : null,
-      border: isGlobal
-          ? Border.all(color: Colors.purple.withValues(alpha: 0.3))
-          : null,
+      customColor: isGlobal ? Colors.purple.withOpacity(0.05) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(
-                icon,
-                color: isGlobal
-                    ? Colors.purpleAccent
-                    : txtColor.withValues(alpha: 0.5),
-              ),
-              if (isGlobal)
-                Icon(
-                  PhosphorIconsBold.trendUp,
-                  size: 16,
-                  color: Colors.greenAccent,
-                ),
-            ],
+          Icon(
+            icon,
+            color: isGlobal ? Colors.purpleAccent : txtColor.withOpacity(0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -173,7 +152,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Text(
             label,
             style: TextStyle(
-              color: txtColor.withValues(alpha: 0.5),
+              color: txtColor.withOpacity(0.5),
               fontSize: 10,
               letterSpacing: 1,
               fontWeight: FontWeight.bold,
@@ -191,10 +170,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       onTap: () => context.push('/url-details', extra: url),
       child: Row(
         children: [
-          Icon(
-            PhosphorIconsRegular.link,
-            color: txtColor.withValues(alpha: 0.5),
-          ),
+          Icon(PhosphorIconsRegular.link, color: txtColor.withOpacity(0.5)),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -208,85 +184,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     fontSize: 16,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
                   url.originalUrl,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: txtColor.withValues(alpha: 0.4),
+                    color: txtColor.withOpacity(0.4),
                     fontSize: 12,
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: Icon(
-              PhosphorIconsBold.copy,
-              size: 18,
-              color: txtColor.withValues(alpha: 0.6),
-            ),
-            onPressed: () async {
-              HapticFeedback.mediumImpact();
-              await Clipboard.setData(ClipboardData(text: url.shortUrl));
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        Icon(
-                          PhosphorIconsBold.checkCircle,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Copied to clipboard',
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                      ],
-                    ),
-                    backgroundColor: Colors.white.withValues(alpha: 0.15),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    duration: const Duration(milliseconds: 1500),
-                  ),
-                );
-              }
-            },
-            tooltip: 'Copy link',
-          ),
           const SizedBox(width: 8),
           Text(
             "${url.clickCount}",
             style: TextStyle(color: txtColor, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(width: 4),
-          Icon(
-            PhosphorIconsRegular.chartBar,
-            size: 14,
-            color: txtColor.withValues(alpha: 0.5),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmpty() {
-    final txtColor = Theme.of(context).disabledColor;
-    return Container(
-      padding: const EdgeInsets.all(40),
-      alignment: Alignment.center,
-      child: Column(
-        children: [
-          Icon(PhosphorIconsRegular.ghost, size: 48, color: txtColor),
-          const SizedBox(height: 16),
-          Text("No active deployments", style: TextStyle(color: txtColor)),
         ],
       ),
     );

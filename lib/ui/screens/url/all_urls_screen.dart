@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
 import '../../../providers/providers.dart';
+import '../../../providers/theme_provider.dart'; // Added this import
 
 class AllUrlsScreen extends ConsumerWidget {
   const AllUrlsScreen({super.key});
@@ -75,7 +76,9 @@ class AllUrlsScreen extends ConsumerWidget {
                               size: 20,
                             ),
                             onPressed: () async {
-                              HapticFeedback.mediumImpact();
+                              if (ref.read(themeProvider).enableHaptics) {
+                                HapticFeedback.mediumImpact();
+                              }
                               await Clipboard.setData(
                                 ClipboardData(text: url.shortUrl),
                               );
