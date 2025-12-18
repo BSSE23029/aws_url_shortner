@@ -5,15 +5,15 @@ This guide explains how to integrate the Flutter frontend with your AWS serverle
 ## 🏗️ Architecture Components
 
 ### Backend Services Required
+
 1. **Amazon Cognito User Pool** - Authentication
 2. **API Gateway** - REST API endpoints
 3. **AWS Lambda** - Business logic
 4. **DynamoDB** - Data storage
 5. **DynamoDB DAX** - Caching layer
-6. **CloudFront** - CDN for static assets
-7. **S3** - Frontend hosting
-8. **Route 53** - DNS and geo-routing
-9. **AWS WAF** - Web Application Firewall
+6. **S3** - Frontend hosting
+7. **Route 53** - DNS and geo-routing
+8. **AWS WAF** - Web Application Firewall
 
 ## 📡 API Integration
 
@@ -54,13 +54,13 @@ class ApiService {
         'email': email,
         'password': password,
       });
-      
+    
       if (response.success) {
         final user = UserModel.fromJson(response.data['user']);
         _authToken = response.data['token'];
         return ApiResponse.success(user);
       }
-      
+    
       return ApiResponse.error(message: response.message ?? 'Login failed');
     } catch (e) {
       return _handleError(e);
@@ -71,14 +71,14 @@ class ApiService {
   Future<ApiResponse<List<UrlModel>>> fetchUrls() async {
     try {
       final response = await _get('/urls');
-      
+    
       if (response.success) {
         final urls = (response.data as List)
             .map((json) => UrlModel.fromJson(json))
             .toList();
         return ApiResponse.success(urls);
       }
-      
+    
       return ApiResponse.error(message: response.message ?? 'Failed to fetch URLs');
     } catch (e) {
       return _handleError(e);
@@ -91,12 +91,12 @@ class ApiService {
         'originalUrl': originalUrl,
         if (customCode != null) 'customCode': customCode,
       });
-      
+    
       if (response.success) {
         final url = UrlModel.fromJson(response.data);
         return ApiResponse.success(url);
       }
-      
+    
       return ApiResponse.error(message: response.message ?? 'Failed to create URL');
     } catch (e) {
       return _handleError(e);
@@ -106,12 +106,12 @@ class ApiService {
   Future<ApiResponse<AnalyticsModel>> getAnalytics(String urlId) async {
     try {
       final response = await _get('/urls/$urlId/analytics');
-      
+    
       if (response.success) {
         final analytics = AnalyticsModel.fromJson(response.data);
         return ApiResponse.success(analytics);
       }
-      
+    
       return ApiResponse.error(message: response.message ?? 'Failed to fetch analytics');
     } catch (e) {
       return _handleError(e);
@@ -148,7 +148,7 @@ class ApiService {
         errorType: ApiErrorType.sessionExpired,
       );
     }
-    
+  
     return ApiResponse.error(
       message: error.toString(),
       errorType: ApiErrorType.unknown,
@@ -165,20 +165,20 @@ In `sign_in_screen.dart`, replace the mock API call:
 Future<void> _handleSignIn() async {
   if (_formKey.currentState!.validate()) {
     setState(() => _isLoading = true);
-    
+  
     final apiService = ApiService();
     final response = await apiService.signIn(
       _emailController.text,
       _passwordController.text,
     );
-    
+  
     setState(() => _isLoading = false);
-    
+  
     if (response.success && response.data != null) {
       // Store auth token and user
       final appState = context.read<AppState>();
       appState.login(response.data!, response.authToken!, response.refreshToken!);
-      
+    
       // Check if MFA is required
       if (response.data!.mfaEnabled) {
         Navigator.pushReplacementNamed(context, '/mfa');
@@ -191,7 +191,7 @@ Future<void> _handleSignIn() async {
         message: response.message ?? 'Login failed',
         errorType: response.errorType,
       );
-      
+    
       // Handle specific errors
       if (response.errorType == ApiErrorType.wafBlocked) {
         Navigator.pushNamed(context, '/waf-blocked');
@@ -222,14 +222,14 @@ Future<void> _loadData() async {
     });
   } else {
     setState(() => _isLoading = false);
-    
+  
     if (mounted) {
       ErrorToast.show(
         context,
         message: response.message ?? 'Failed to load data',
         errorType: response.errorType,
       );
-      
+    
       // Handle session expiry
       if (response.errorType == ApiErrorType.sessionExpired) {
         showSessionExpiredDialog(
@@ -250,40 +250,40 @@ In `create_url_screen.dart`:
 Future<void> _handleCreateUrl() async {
   if (_formKey.currentState!.validate()) {
     setState(() => _isCreating = true);
-    
+  
     // Generate optimistic data
     final shortCode = _useCustomCode && _customCodeController.text.isNotEmpty
         ? _customCodeController.text
         : _generateRandomCode();
-    
+  
     final shortUrl = 'https://short.ly/$shortCode';
-    
+  
     // Show success immediately (optimistic)
     setState(() {
       _createdShortUrl = shortUrl;
       _isCreating = false;
     });
-    
+  
     // Create URL in background
     final apiService = ApiService();
     final response = await apiService.createUrl(
       _urlController.text,
       customCode: _useCustomCode ? _customCodeController.text : null,
     );
-    
+  
     if (!response.success) {
       // Rollback on error
       if (mounted) {
         setState(() {
           _createdShortUrl = null;
         });
-        
+      
         ErrorToast.show(
           context,
           message: response.message ?? 'Failed to create URL',
           errorType: response.errorType,
         );
-        
+      
         if (response.errorType == ApiErrorType.rateLimitExceeded) {
           ThrottlingToast.show(context);
         }
@@ -320,7 +320,7 @@ Future<void> _configureAmplify() async {
   try {
     final auth = AmplifyAuthCognito();
     await Amplify.addPlugin(auth);
-    
+  
     const amplifyconfig = '''{
       "UserAgent": "aws-amplify-cli/2.0",
       "Version": "1.0",
@@ -356,7 +356,7 @@ Future<void> _configureAmplify() async {
         }
       }
     }''';
-    
+  
     await Amplify.configure(amplifyconfig);
   } catch (e) {
     debugPrint('Error configuring Amplify: $e');
@@ -377,7 +377,7 @@ class RegionService {
       final response = await http.get(
         Uri.parse('https://your-cloudfront-url.cloudfront.net/api/region'),
       );
-      
+    
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['region'] ?? 'us-east-1';
@@ -385,18 +385,18 @@ class RegionService {
     } catch (e) {
       debugPrint('Error detecting region: $e');
     }
-    
+  
     return 'us-east-1'; // Default fallback
   }
   
   static Future<int> measureLatency(String region) async {
     final start = DateTime.now();
-    
+  
     try {
       await http.get(
         Uri.parse('https://your-api-$region.amazonaws.com/health'),
       );
-      
+    
       final end = DateTime.now();
       return end.difference(start).inMilliseconds;
     } catch (e) {
@@ -558,7 +558,9 @@ testWidgets('Create URL flow', (tester) async {
 ## 🆘 Troubleshooting
 
 ### CORS Issues
+
 Ensure API Gateway has proper CORS configuration:
+
 ```json
 {
   "Access-Control-Allow-Origin": "*",
@@ -568,7 +570,9 @@ Ensure API Gateway has proper CORS configuration:
 ```
 
 ### Session Timeout
+
 Implement token refresh logic:
+
 ```dart
 Future<void> refreshToken() async {
   if (_refreshToken != null) {
@@ -581,6 +585,7 @@ Future<void> refreshToken() async {
 ```
 
 ### Performance
+
 - Enable DynamoDB DAX for <1ms reads
 - Use CloudFront edge locations
 - Implement proper caching headers

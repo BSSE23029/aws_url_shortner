@@ -1,0 +1,202 @@
+\documentclass[final]{beamer}
+
+% ==============================================================================
+% 1. PACKAGES & SETUP
+% ==============================================================================
+% 2 feet = 60.96 cm | 5 feet = 152.4 cm
+\usepackage[orientation=portrait,size=custom,width=60.96,height=152.4,scale=1.24,debug]{beamerposter}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc} % Recommended for font encoding
+\usepackage{lmodern}      % Provides better scalable fonts to avoid warnings
+\usepackage{ragged2e}     % For justifying text in narrow columns
+\usepackage{booktabs} 
+\usepackage{tcolorbox}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+% ==============================================================================
+% 2. THEME & COLORS (AWS Academy Theme)
+% ==============================================================================
+\usetheme{Madrid}
+\usecolortheme{whale}
+
+% Custom Colors
+\definecolor{awsNavy}{HTML}{232F3E} 
+\definecolor{awsTeal}{HTML}{00A8E1} 
+\definecolor{lightGray}{HTML}{F2F2F2}
+
+% Apply Colors
+\setbeamercolor{palette primary}{bg=awsNavy,fg=white}
+\setbeamercolor{palette secondary}{bg=awsTeal,fg=white}
+\setbeamercolor{titlelike}{fg=white,bg=awsNavy}
+\setbeamercolor{block title}{bg=awsNavy,fg=white}
+\setbeamercolor{block body}{bg=lightGray,fg=black}
+
+% Enable full justification in blocks (globally)
+\apptocmd{\frame}{\justifying}{}{} 
+
+% ==============================================================================
+% 3. META DATA
+% ==============================================================================
+\title{\Huge \textbf{Rad Link: Serverless URL Shortener}}
+\author{\Large \textbf{Custom SSL Termination on AWS Academy}}
+\institute{\large \textbf{RazaSoft Tech | Semester Project | Dec 2025}}
+\date{}
+
+% ==============================================================================
+% 4. CONTENT
+% ==============================================================================
+\begin{document}
+\begin{frame}[t]
+
+    % --- HEADER ---
+    \begin{beamercolorbox}[wd=\paperwidth,sep=1.5cm,center]{titlelike}
+        \usebeamerfont{title}\inserttitle\par\bigskip
+        \usebeamerfont{author}\insertauthor\par\medskip
+        \usebeamerfont{institute}\insertinstitute
+    \end{beamercolorbox}
+
+    \vspace{1cm}
+
+    % --- COLUMNS ---
+    \begin{columns}[t]
+        
+        % ======================================================================
+        % LEFT COLUMN (Backend & Infrastructure)
+        % ======================================================================
+        % Slightly reduced width to prevent "Overfull hbox" warnings
+        \begin{column}{.45\paperwidth}
+            
+            % BLOCK 1
+            \begin{block}{1. Project Abstract}
+                \justifying
+                Rad Link is a production-grade URL shortening service designed to differentiate itself through ``Radical Transparency.'' It features a \textbf{Stupidity Dashboard}—a real-time visualization of system-wide usage, OS distribution wars, and geographic traffic heatmaps. The project demonstrates how to overcome the strict constraints of the AWS Academy Learner Lab environment by implementing a hybrid serverless architecture.
+            \end{block}
+
+            \vspace{0.8cm}
+
+            % BLOCK 2
+            \begin{block}{2. The Architecture Workaround}
+                \justifying
+                A major challenge in AWS Academy is the restriction on CloudFront and AWS Certificate Manager (ACM) for custom domains. To achieve secure HTTPS termination for \texttt{api.razasoft.tech}, we engineered a custom proxy layer.
+                
+                \vspace{0.5em}
+                \textbf{Infrastructure Flow:}
+                \begin{itemize}
+                    \item \textbf{Entry Point:} An \textbf{EC2 t2.micro} instance acts as the public-facing gateway.
+                    \item \textbf{SSL Layer:} We utilized \textbf{Certbot} to generate and auto-renew Let's Encrypt certificates directly on the EC2 instance, bypassing ACM entirely.
+                    \item \textbf{Reverse Proxy:} An Nginx server block accepts HTTPS traffic and reverse-proxies it to the internal AWS HTTP API Gateway URL.
+                    \item \textbf{Result:} Seamless SSL termination with zero cost for custom certificates.
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.8cm}
+
+            % BLOCK 3
+            \begin{block}{3. Backend Engineering}
+                \justifying
+                The core logic resides in a \textbf{Monolithic Node.js 20.x Lambda}. A monolith pattern was chosen over microservices to reduce cold starts and simplify the shared database connection logic.
+                
+                \vspace{0.5em}
+                \textbf{Atomic Transactions:}
+                Updating analytics is complex. When a link is clicked, three distinct entities must update: the Link's specific count, the User's aggregate count, and the Global System dashboard. We use DynamoDB \texttt{TransactWriteItems} to ensure these updates happen atomically—either all metrics update, or none do, ensuring data consistency.
+            \end{block}
+            
+            \vspace{0.8cm}
+            
+            % BLOCK 4
+            \begin{block}{4. DynamoDB Single Table Design}
+               \justifying
+               To support the ``Mega-Sync'' dashboard (loading all data in one request), we used overloaded keys in a single table.
+               
+               \vspace{0.5em}
+               \begin{table}
+               \centering
+               \footnotesize
+               \begin{tabular}{ll}
+                   \toprule
+                   \textbf{Data Entity} & \textbf{Key Structure} \\
+                   \midrule
+                   \textbf{Link Meta} & PK: \texttt{LINK\#<id>} \\
+                                      & SK: \texttt{META} \\
+                   \midrule
+                   \textbf{Daily Stats} & PK: \texttt{LINK\#<id>} \\
+                                        & SK: \texttt{STATS\#<date>} \\
+                   \midrule
+                   \textbf{Global State} & PK: \texttt{SYSTEM\#GLOBAL} \\
+                                         & SK: \texttt{STATS\#TOTAL} \\
+                   \bottomrule
+               \end{tabular}
+               \end{table}
+            \end{block}
+
+        \end{column}
+
+        % ======================================================================
+        % RIGHT COLUMN (Frontend, Security, & Visuals)
+        % ======================================================================
+        \begin{column}{.45\paperwidth}
+
+            % BLOCK 5
+            \begin{block}{5. Flutter Frontend Architecture}
+                \justifying
+                The frontend is a reactive web application built with Flutter 3.x and \textbf{Riverpod} for state management. It features a custom ``Cyber-Glass'' aesthetic optimized for web performance.
+                
+                \vspace{0.5em}
+                \textbf{Optimistic UI Implementation:}
+                To mask network latency, the app implements Optimistic UI. When a user generates a link:
+                \begin{enumerate}
+                    \item The UI immediately adds the link to the dashboard list locally.
+                    \item The user perceives 0ms latency.
+                    \item The API call processes in the background.
+                    \item If the Lambda returns an error (e.g., WAF block), the state rolls back and notifies the user.
+                \end{enumerate}
+            \end{block}
+
+            \vspace{0.8cm}
+
+            % BLOCK 6
+            % --- FIX 1: Escaped the '&' in the block title ---
+            \begin{block}{6. Security \& Auth}
+                % Removing justification for itemize to prevent "Underfull hbox" warnings
+                \begin{itemize}
+                    % --- FIX 2: Escaped the '&' in the item text ---
+                    \item \textbf{Cognito \& SRP:} We use Amazon Cognito User Pools with the Secure Remote Password (SRP) protocol. Passwords never travel over the network.
+                    \item \textbf{JWT Authorization:} The EC2 proxy passes headers intact to API Gateway, which validates the JSON Web Token (JWT) signature before invoking Lambda.
+                    \item \textbf{WAF:} AWS Web Application Firewall is deployed to rate-limit aggressive IPs and prevent bot spam.
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.8cm}
+
+            % BLOCK 7
+            \begin{block}{7. Dashboard Visualization}
+                \justifying
+                The ``Stupidity Dashboard'' aggregates data from the \texttt{SYSTEM\#GLOBAL} partition.
+                
+                \vspace{0.5em}
+                \begin{tcolorbox}[colback=white,colframe=awsNavy,boxrule=0.5mm]
+                    \centering
+                    \vspace{3.5cm}
+                    \textbf{\Large [Insert Dashboard Screenshot Here]}
+                    \vspace{0.5em}
+                    \small \textit{Showing Real-Time OS Distribution}
+                    \vspace{3.5cm}
+                \end{tcolorbox}
+            \end{block}
+
+            \vspace{0.8cm}
+
+            % BLOCK 8
+            \begin{block}{8. Conclusion}
+                \justifying
+                Rad Link proves that robust, production-grade architectures can be built even within restrictive environments. By leveraging EC2 for SSL termination and DynamoDB for massive scale, the system achieves high performance with minimal idle costs.
+            \end{block}
+
+        \end{column}
+
+    \end{columns}
+
+\end{frame}
+\end{document}
