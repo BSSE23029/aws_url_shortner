@@ -26,7 +26,7 @@ jobs:
 
       # 4. Build for Web (Release Mode)
       - name: Build Flutter Web
-        run: flutter build web --release --web-renderer html
+        run: flutter build web --release
 
       # 5. Configure AWS Credentials
       - name: Configure AWS Credentials
