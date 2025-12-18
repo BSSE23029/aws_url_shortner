@@ -4,44 +4,47 @@
 % 1. PACKAGES & SETUP
 % ==============================================================================
 % 2 feet = 60.96 cm | 5 feet = 152.4 cm
-\usepackage[orientation=portrait,size=custom,width=60.96,height=152.4,scale=1.24,debug]{beamerposter}
+\usepackage[orientation=portrait,size=custom,width=60.96,height=152.4,scale=1.25,debug]{beamerposter}
 
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc} % Recommended for font encoding
-\usepackage{lmodern}      % Provides better scalable fonts to avoid warnings
-\usepackage{ragged2e}     % For justifying text in narrow columns
+\usepackage[T1]{fontenc} 
+\usepackage{lmodern}      
+\usepackage{ragged2e}     
 \usepackage{booktabs} 
 \usepackage{tcolorbox}
 \usepackage{amsmath}
 \usepackage{graphicx}
+% REMOVED enumitem to fix the "TeX capacity exceeded" error
 
 % ==============================================================================
-% 2. THEME & COLORS (AWS Academy Theme)
+% 2. THEME & COLORS (Market-Ready Theme)
 % ==============================================================================
 \usetheme{Madrid}
 \usecolortheme{whale}
 
-% Custom Colors
-\definecolor{awsNavy}{HTML}{232F3E} 
-\definecolor{awsTeal}{HTML}{00A8E1} 
-\definecolor{lightGray}{HTML}{F2F2F2}
+% Professional Color Palette
+\definecolor{deepNavy}{HTML}{0F172A}    % Slate 900 (Backgrounds)
+\definecolor{electricBlue}{HTML}{3B82F6} % Blue 500 (Accents)
+\definecolor{moneyGreen}{HTML}{059669}   % Emerald 600 (Money/Success)
+\definecolor{bgGray}{HTML}{F8FAFC}       % Slate 50 (Text blocks)
+\definecolor{gold}{HTML}{D97706}         % Amber 600 (Crown Jewels)
 
 % Apply Colors
-\setbeamercolor{palette primary}{bg=awsNavy,fg=white}
-\setbeamercolor{palette secondary}{bg=awsTeal,fg=white}
-\setbeamercolor{titlelike}{fg=white,bg=awsNavy}
-\setbeamercolor{block title}{bg=awsNavy,fg=white}
-\setbeamercolor{block body}{bg=lightGray,fg=black}
+\setbeamercolor{palette primary}{bg=deepNavy,fg=white}
+\setbeamercolor{palette secondary}{bg=electricBlue,fg=white}
+\setbeamercolor{titlelike}{fg=white,bg=deepNavy}
+\setbeamercolor{block title}{bg=deepNavy,fg=white}
+\setbeamercolor{block body}{bg=bgGray,fg=black}
 
-% Enable full justification in blocks (globally)
+% Enable full justification
 \apptocmd{\frame}{\justifying}{}{} 
 
 % ==============================================================================
 % 3. META DATA
 % ==============================================================================
-\title{\Huge \textbf{Rad Link: Serverless URL Shortener}}
-\author{\Large \textbf{Custom SSL Termination on AWS Academy}}
-\institute{\large \textbf{RazaSoft Tech | Semester Project | Dec 2025}}
+\title{\Huge \textbf{Rad Link: Enterprise Traffic Intelligence}}
+\author{\Large \textbf{Scalable. Serverless. Live Production Asset.}}
+\institute{\large \textbf{RazaSoft Tech | Semester Project 2025}}
 \date{}
 
 % ==============================================================================
@@ -59,139 +62,135 @@
 
     \vspace{1cm}
 
-    % --- COLUMNS ---
+    % --- 2-COLUMN LAYOUT ---
     \begin{columns}[t]
         
         % ======================================================================
-        % LEFT COLUMN (Backend & Infrastructure)
+        % LEFT COLUMN
         % ======================================================================
-        % Slightly reduced width to prevent "Overfull hbox" warnings
-        \begin{column}{.45\paperwidth}
+        \begin{column}{.46\paperwidth}
             
-            % BLOCK 1
-            \begin{block}{1. Project Abstract}
+            % PORTION 1: THE VISION
+            \begin{block}{1. The Vision: Radical Transparency}
                 \justifying
-                Rad Link is a production-grade URL shortening service designed to differentiate itself through ``Radical Transparency.'' It features a \textbf{Stupidity Dashboard}—a real-time visualization of system-wide usage, OS distribution wars, and geographic traffic heatmaps. The project demonstrates how to overcome the strict constraints of the AWS Academy Learner Lab environment by implementing a hybrid serverless architecture.
-            \end{block}
-
-            \vspace{0.8cm}
-
-            % BLOCK 2
-            \begin{block}{2. The Architecture Workaround}
-                \justifying
-                A major challenge in AWS Academy is the restriction on CloudFront and AWS Certificate Manager (ACM) for custom domains. To achieve secure HTTPS termination for \texttt{api.razasoft.tech}, we engineered a custom proxy layer.
+                Rad Link is a high-performance traffic intelligence engine. We moved beyond localhost development to deploy a fully resolvable, brand-ready product available to the global market.
                 
                 \vspace{0.5em}
-                \textbf{Infrastructure Flow:}
+                \textbf{Market Differentiators:}
                 \begin{itemize}
-                    \item \textbf{Entry Point:} An \textbf{EC2 t2.micro} instance acts as the public-facing gateway.
-                    \item \textbf{SSL Layer:} We utilized \textbf{Certbot} to generate and auto-renew Let's Encrypt certificates directly on the EC2 instance, bypassing ACM entirely.
-                    \item \textbf{Reverse Proxy:} An Nginx server block accepts HTTPS traffic and reverse-proxies it to the internal AWS HTTP API Gateway URL.
-                    \item \textbf{Result:} Seamless SSL termination with zero cost for custom certificates.
+                    \item \textbf{Stupidity Dashboard:} Real-time aggregation of OS wars and traffic heatmaps.
+                    \item \textbf{Zero-Cost Idle:} Serverless architecture ensures we pay nothing when traffic is low.
                 \end{itemize}
             \end{block}
 
-            \vspace{0.8cm}
+            \vspace{1cm}
 
-            % BLOCK 3
-            \begin{block}{3. Backend Engineering}
+            % PORTION 2: THE CROWN JEWELS (New Section)
+            % This uses a specific color box to highlight the domains
+            \begin{tcolorbox}[colback=white, colframe=moneyGreen, title=\centering\textbf{\Large 2. THE CROWN JEWELS: LIVE ECOSYSTEM}]
                 \justifying
-                The core logic resides in a \textbf{Monolithic Node.js 20.x Lambda}. A monolith pattern was chosen over microservices to reduce cold starts and simplify the shared database connection logic.
+                The defining achievement of this project is the successful acquisition and deployment of premium digital real estate. We didn't just build an app; we launched a brand.
+                
+                \vspace{0.8em}
+                \centering
+                \textbf{\large The Production Domain:} \\
+                {\Huge \texttt{\textcolor{deepNavy}{razasoft.tech}}}
                 
                 \vspace{0.5em}
+                \textit{A fully optimized Flutter Web Application delivered via custom DNS.}
+                
+                \vspace{0.8em}
+                \hrule
+                \vspace{0.8em}
+                
+                \textbf{\large The Backbone API:} \\
+                {\Huge \texttt{\textcolor{deepNavy}{api.razasoft.tech}}}
+                
+                \vspace{0.5em}
+                \justifying
+                \small
+                This endpoint represents a triumph over AWS Academy constraints. By routing traffic through a custom EC2 SSL termination layer, we achieved a secure, verified HTTPS handshake for our custom API domain—something typically impossible in student environments.
+            \end{tcolorbox}
+            
+            \vspace{1cm}
+            
+            % PORTION 3: THE BACKEND ENGINE
+            \begin{block}{3. Unified Compute Architecture}
+                \justifying
+                We utilize a \textbf{Monolithic Lambda} (Node.js 20.x) to handle all traffic hitting \texttt{api.razasoft.tech}.
+                
+                \vspace{0.5em}
+                \textbf{DynamoDB Single Table Design:}
+                We maximized efficiency by overloading keys in a single table.
+                \begin{table}
+                \centering
+                \footnotesize
+                \begin{tabular}{lll}
+                    \toprule
+                    \textbf{Entity} & \textbf{PK} & \textbf{SK} \\
+                    \midrule
+                    Link Meta & \texttt{LINK\#<id>} & \texttt{META} \\
+                    Analytics & \texttt{LINK\#<id>} & \texttt{STATS\#<date>} \\
+                    Global & \texttt{SYSTEM} & \texttt{GLOBAL} \\
+                    \bottomrule
+                \end{tabular}
+                \end{table}
+
+                \vspace{0.5em}
                 \textbf{Atomic Transactions:}
-                Updating analytics is complex. When a link is clicked, three distinct entities must update: the Link's specific count, the User's aggregate count, and the Global System dashboard. We use DynamoDB \texttt{TransactWriteItems} to ensure these updates happen atomically—either all metrics update, or none do, ensuring data consistency.
-            \end{block}
-            
-            \vspace{0.8cm}
-            
-            % BLOCK 4
-            \begin{block}{4. DynamoDB Single Table Design}
-               \justifying
-               To support the ``Mega-Sync'' dashboard (loading all data in one request), we used overloaded keys in a single table.
-               
-               \vspace{0.5em}
-               \begin{table}
-               \centering
-               \footnotesize
-               \begin{tabular}{ll}
-                   \toprule
-                   \textbf{Data Entity} & \textbf{Key Structure} \\
-                   \midrule
-                   \textbf{Link Meta} & PK: \texttt{LINK\#<id>} \\
-                                      & SK: \texttt{META} \\
-                   \midrule
-                   \textbf{Daily Stats} & PK: \texttt{LINK\#<id>} \\
-                                        & SK: \texttt{STATS\#<date>} \\
-                   \midrule
-                   \textbf{Global State} & PK: \texttt{SYSTEM\#GLOBAL} \\
-                                         & SK: \texttt{STATS\#TOTAL} \\
-                   \bottomrule
-               \end{tabular}
-               \end{table}
+                Using \texttt{TransactWriteItems}, a single click triggers three atomic updates simultaneously: the link count, the user's stats, and the global dashboard.
             \end{block}
 
         \end{column}
 
         % ======================================================================
-        % RIGHT COLUMN (Frontend, Security, & Visuals)
+        % RIGHT COLUMN
         % ======================================================================
-        \begin{column}{.45\paperwidth}
+        \begin{column}{.46\paperwidth}
 
-            % BLOCK 5
-            \begin{block}{5. Flutter Frontend Architecture}
+            % PORTION 4: THE USER EXPERIENCE
+            \begin{block}{4. Frontend: The 0ms Latency UI}
                 \justifying
-                The frontend is a reactive web application built with Flutter 3.x and \textbf{Riverpod} for state management. It features a custom ``Cyber-Glass'' aesthetic optimized for web performance.
+                Hosted at \textbf{razasoft.tech}, the frontend is built with Flutter 3.x and Riverpod. It implements an \textbf{Optimistic UI} pattern to eliminate perceived network latency.
                 
                 \vspace{0.5em}
-                \textbf{Optimistic UI Implementation:}
-                To mask network latency, the app implements Optimistic UI. When a user generates a link:
-                \begin{enumerate}
-                    \item The UI immediately adds the link to the dashboard list locally.
-                    \item The user perceives 0ms latency.
-                    \item The API call processes in the background.
-                    \item If the Lambda returns an error (e.g., WAF block), the state rolls back and notifies the user.
-                \end{enumerate}
-            \end{block}
-
-            \vspace{0.8cm}
-
-            % BLOCK 6
-            % --- FIX 1: Escaped the '&' in the block title ---
-            \begin{block}{6. Security \& Auth}
-                % Removing justification for itemize to prevent "Underfull hbox" warnings
+                \textbf{The ``Cyber-Glass'' Experience:}
                 \begin{itemize}
-                    % --- FIX 2: Escaped the '&' in the item text ---
-                    \item \textbf{Cognito \& SRP:} We use Amazon Cognito User Pools with the Secure Remote Password (SRP) protocol. Passwords never travel over the network.
-                    \item \textbf{JWT Authorization:} The EC2 proxy passes headers intact to API Gateway, which validates the JSON Web Token (JWT) signature before invoking Lambda.
-                    \item \textbf{WAF:} AWS Web Application Firewall is deployed to rate-limit aggressive IPs and prevent bot spam.
+                    \item \textbf{Instant Feedback:} When a user interacts with the domain, the UI updates instantly while the API synchronizes in the background.
+                    \item \textbf{Mega-Sync Engine:} A single call to the API hydrates the entire dashboard state in one frame.
                 \end{itemize}
             \end{block}
 
-            \vspace{0.8cm}
+            \vspace{1cm}
 
-            % BLOCK 7
-            \begin{block}{7. Dashboard Visualization}
+            % PORTION 5: BUSINESS VALUE
+            \begin{block}{5. Business Value \& Scalability}
                 \justifying
-                The ``Stupidity Dashboard'' aggregates data from the \texttt{SYSTEM\#GLOBAL} partition.
+                The ability to secure and deploy \textbf{custom domains} transforms this from a coding project into a marketable SaaS product.
                 
                 \vspace{0.5em}
-                \begin{tcolorbox}[colback=white,colframe=awsNavy,boxrule=0.5mm]
-                    \centering
-                    \vspace{3.5cm}
-                    \textbf{\Large [Insert Dashboard Screenshot Here]}
-                    \vspace{0.5em}
-                    \small \textit{Showing Real-Time OS Distribution}
-                    \vspace{3.5cm}
-                \end{tcolorbox}
+                \textbf{Key Deliverables:}
+                \begin{itemize}
+                    \item \textbf{Brand Identity:} Full control over DNS allows for professional branding via \texttt{razasoft.tech}.
+                    \item \textbf{Infinite Scalability:} DynamoDB On-Demand capacity handles viral traffic spikes hitting the domain without manual sharding.
+                    \item \textbf{Cost Optimization:} By decoupling SSL from managed services, we reduced infrastructure overhead significantly.
+                \end{itemize}
             \end{block}
 
-            \vspace{0.8cm}
+            \vspace{1cm}
 
-            % BLOCK 8
-            \begin{block}{8. Conclusion}
-                \justifying
-                Rad Link proves that robust, production-grade architectures can be built even within restrictive environments. By leveraging EC2 for SSL termination and DynamoDB for massive scale, the system achieves high performance with minimal idle costs.
+            % VISUALS
+            \begin{block}{System Visualization}
+                \centering
+                \begin{tcolorbox}[colback=white,colframe=deepNavy,boxrule=0.5mm,arc=0mm]
+                    \centering
+                    \vspace{5cm}
+                    \textbf{\huge [Insert Dashboard Screenshot]}
+                    \vspace{0.5em}
+                    
+                    \textit{Fig 1. Live traffic analysis on razasoft.tech}
+                    \vspace{5cm}
+                \end{tcolorbox}
             \end{block}
 
         \end{column}
