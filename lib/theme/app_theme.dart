@@ -4,6 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/theme_provider.dart';
 
 class AppTheme {
+  // AppTheme.light and AppTheme.dark
+  static ThemeData get light =>
+      AppTheme.generate(ThemeSettings(), brightness: Brightness.light);
+  static ThemeData get dark =>
+      AppTheme.generate(ThemeSettings(), brightness: Brightness.dark);
+
   static ThemeData generate(
     ThemeSettings settings, {
     required Brightness brightness,

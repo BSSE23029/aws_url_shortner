@@ -33,7 +33,6 @@ import 'ui/screens/error/waf_blocked_screen.dart';
 import 'ui/widgets/stealth_rail.dart';
 
 void main() {
-  // Ensure Flutter is initialized before anything else
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: UrlShortenerApp()));
 }
@@ -70,10 +69,16 @@ class UrlShortenerApp extends ConsumerWidget {
   }
 
   GoRouter _router(WidgetRef ref) {
+    // 1. We watch auth provider so the router rebuilds on changes
+    final authState = ref.watch(authProvider);
+
     return GoRouter(
       initialLocation: '/signin',
+      // 2. This is crucial: It forces the router to re-evaluate 'redirect' when auth changes
+      refreshListenable: _AuthListenable(ref),
+
       routes: [
-        // --- AUTHENTICATION ROUTES (Zero UI Shell) ---
+        // --- AUTHENTICATION ROUTES ---
         GoRoute(path: '/signin', builder: (_, __) => const SignInScreen()),
         GoRoute(path: '/signup', builder: (_, __) => const SignUpScreen()),
         GoRoute(path: '/mfa', builder: (_, __) => const MfaScreen()),
@@ -82,7 +87,7 @@ class UrlShortenerApp extends ConsumerWidget {
           builder: (_, __) => const ForgotPasswordScreen(),
         ),
 
-        // --- MAIN APPLICATION SHELL (With Stealth Rail) ---
+        // --- MAIN APPLICATION SHELL ---
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             final width = MediaQuery.of(context).size.width;
@@ -101,6 +106,7 @@ class UrlShortenerApp extends ConsumerWidget {
               ),
 
               // BOTTOM NAV: Only visible on Mobile
+              // I kept your original design exactly as requested
               bottomNavigationBar: width <= 600
                   ? BottomNavigationBar(
                       currentIndex: navigationShell.currentIndex,
@@ -133,7 +139,7 @@ class UrlShortenerApp extends ConsumerWidget {
             );
           },
           branches: [
-            // Branch 0: Dashboard Overview
+            // Branch 0: Dashboard
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -142,7 +148,7 @@ class UrlShortenerApp extends ConsumerWidget {
                 ),
               ],
             ),
-            // Branch 1: Stats / Analytics
+            // Branch 1: Stats
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -151,7 +157,7 @@ class UrlShortenerApp extends ConsumerWidget {
                 ),
               ],
             ),
-            // Branch 2: Preferences (Settings Context)
+            // Branch 2: Preferences
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -160,7 +166,7 @@ class UrlShortenerApp extends ConsumerWidget {
                 ),
               ],
             ),
-            // Branch 3: Profile (Settings Context)
+            // Branch 3: Profile
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -172,10 +178,18 @@ class UrlShortenerApp extends ConsumerWidget {
           ],
         ),
 
-        // --- GLOBAL OVERLAYS (Modal-style routes without sidebar) ---
+        // --- GLOBAL OVERLAYS ---
         GoRoute(
           path: '/create-url',
-          builder: (_, __) => const CreateUrlScreen(),
+          // Using CustomTransitionPage for a smoother overlay effect
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const CreateUrlScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+          ),
         ),
         GoRoute(path: '/all-urls', builder: (_, __) => const AllUrlsScreen()),
         GoRoute(
@@ -195,8 +209,7 @@ class UrlShortenerApp extends ConsumerWidget {
 
       // --- ROUTE GUARD (Authentication Control) ---
       redirect: (context, state) {
-        final auth = ref.read(authProvider);
-        final isAuth = auth.isAuthenticated;
+        final isAuth = authState.isAuthenticated;
 
         // Check if current destination is an Auth page
         final isAuthRoute =
@@ -205,15 +218,30 @@ class UrlShortenerApp extends ConsumerWidget {
             state.matchedLocation.startsWith('/mfa') ||
             state.matchedLocation.startsWith('/forgot-password');
 
-        // Logic:
         // 1. If logged in and trying to access Signin -> Go to Dash
         if (isAuth && isAuthRoute) return '/dashboard';
 
         // 2. If not logged in and trying to access App -> Go to Signin
         if (!isAuth && !isAuthRoute) return '/signin';
 
+        // 3. New Logic: If email needs confirmation, force MFA screen
+        if (authState.confirmationRequired &&
+            !state.matchedLocation.startsWith('/mfa')) {
+          return '/mfa';
+        }
+
         return null; // No redirection needed
       },
     );
+  }
+}
+
+/// Helper to trigger redirects when Auth State changes
+class _AuthListenable extends ChangeNotifier {
+  final WidgetRef ref;
+  _AuthListenable(this.ref) {
+    ref.listen<AuthState>(authProvider, (_, __) {
+      notifyListeners();
+    });
   }
 }

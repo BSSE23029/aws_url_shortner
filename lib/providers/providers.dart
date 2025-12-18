@@ -3,8 +3,6 @@ import '../middleware/api_client.dart';
 import '../models/models.dart';
 import '../config.dart';
 
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
-
 class AuthState {
   final UserModel? user;
   final String? token;
@@ -168,25 +166,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.watch(apiClientProvider));
-});
-
 // --- URLS STATE ---
 class UrlsState {
   final List<UrlModel> urls;
+  final GlobalStatsModel globalStats; // <--- The "Stupidity" Data
   final bool isLoading;
   final String? errorMessage;
 
-  UrlsState({this.urls = const [], this.isLoading = false, this.errorMessage});
+  UrlsState({
+    this.urls = const [],
+    GlobalStatsModel? globalStats,
+    this.isLoading = false,
+    this.errorMessage,
+  }) : globalStats = globalStats ?? GlobalStatsModel.empty();
+
+  // Local Metric: Sum of my own clicks
+  int get myTotalClicks => urls.fold(0, (sum, item) => sum + item.clickCount);
 
   UrlsState copyWith({
     List<UrlModel>? urls,
+    GlobalStatsModel? globalStats,
     bool? isLoading,
     String? errorMessage,
   }) {
     return UrlsState(
       urls: urls ?? this.urls,
+      globalStats: globalStats ?? this.globalStats,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
     );
@@ -197,19 +202,56 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
   final ApiClient _apiClient;
   UrlsNotifier(this._apiClient) : super(UrlsState());
 
-  Future<void> loadUrls() async {
+  Future<void> loadDashboard() async {
+    print("🔵 [PROVIDER] Loading Dashboard...");
     state = state.copyWith(isLoading: true, errorMessage: null);
-    final response = await _apiClient.getUrls();
+
+    final response = await _apiClient.getDashboardSync();
 
     if (response.success && response.data != null) {
-      if (response.data is Map && response.data!['urls'] != null) {
-        final List<dynamic> list = response.data!['urls'];
-        final urls = list.map((e) => UrlModel.fromJson(e)).toList();
-        state = state.copyWith(urls: urls, isLoading: false);
-      } else {
-        state = state.copyWith(isLoading: false);
+      try {
+        final data = response.data!;
+        print("🔵 [PROVIDER] Parsing Data...");
+
+        // Robust Parsing for URLs
+        List<UrlModel> urls = [];
+        if (data['urls'] != null) {
+          final List<dynamic> urlList = data['urls'];
+          urls = urlList
+              .map((e) {
+                try {
+                  return UrlModel.fromJson(e);
+                } catch (e) {
+                  print("⚠️ Failed to parse specific URL: $e");
+                  return null;
+                }
+              })
+              .whereType<UrlModel>()
+              .toList();
+        }
+
+        // Robust Parsing for Global Stats
+        GlobalStatsModel global = GlobalStatsModel.empty();
+        if (data['globalStats'] != null) {
+          global = GlobalStatsModel.fromJson(data['globalStats']);
+        }
+
+        print("✅ [PROVIDER] Loaded ${urls.length} URLs and Global Stats");
+        state = state.copyWith(
+          urls: urls,
+          globalStats: global,
+          isLoading: false,
+        );
+      } catch (e, stack) {
+        print("❌ [PROVIDER] CRITICAL PARSE ERROR: $e");
+        print(stack);
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: "Data format error: $e",
+        );
       }
     } else {
+      print("❌ [PROVIDER] API Failed: ${response.message}");
       state = state.copyWith(isLoading: false, errorMessage: response.message);
     }
   }
@@ -218,15 +260,29 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
     required String originalUrl,
     String? customCode,
   }) async {
+    print("🔵 [PROVIDER] Creating URL: $originalUrl");
     state = state.copyWith(isLoading: true, errorMessage: null);
+
     final response = await _apiClient.createUrl(
       originalUrl: originalUrl,
       customCode: customCode,
     );
 
     if (response.success && response.data != null) {
-      final newUrl = UrlModel.fromJson(response.data!['url']);
-      state = state.copyWith(urls: [newUrl, ...state.urls], isLoading: false);
+      try {
+        // Handle nested 'url' object if present, or flat response
+        final urlData = response.data!['url'] ?? response.data!;
+        final newUrl = UrlModel.fromJson(urlData);
+
+        print("✅ [PROVIDER] URL Created: ${newUrl.shortCode}");
+        state = state.copyWith(urls: [newUrl, ...state.urls], isLoading: false);
+      } catch (e) {
+        print("❌ [PROVIDER] Failed to parse Created URL: $e");
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: "Created but failed to display.",
+        );
+      }
     } else {
       state = state.copyWith(
         isLoading: false,
@@ -236,19 +292,30 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
   }
 
   Future<void> deleteUrl(String id) async {
+    print("🔵 [PROVIDER] Deleting URL: $id");
     final previousUrls = state.urls;
     state = state.copyWith(urls: state.urls.where((u) => u.id != id).toList());
+
     final response = await _apiClient.deleteUrl(id);
     if (!response.success) {
+      print("❌ [PROVIDER] Delete failed, rolling back.");
       state = state.copyWith(
         urls: previousUrls,
-        errorMessage: response.message ?? "Failed to delete",
+        errorMessage: response.message,
       );
     }
   }
 }
 
+final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+
 final urlsProvider = StateNotifierProvider<UrlsNotifier, UrlsState>(
   (ref) => UrlsNotifier(ref.watch(apiClientProvider)),
 );
+
+// Auth Provider Definitions (Simplified for context)
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  return AuthNotifier(ref.watch(apiClientProvider));
+});
+
 final regionProvider = StateProvider<String>((ref) => AppConfig.defaultRegion);

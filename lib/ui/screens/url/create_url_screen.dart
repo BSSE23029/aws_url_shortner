@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -23,13 +24,17 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    HapticFeedback.mediumImpact();
     await ref
         .read(urlsProvider.notifier)
         .createUrl(
           originalUrl: _urlController.text,
           customCode: _useCustomCode ? _codeController.text : null,
         );
-    if (mounted && ref.read(urlsProvider).errorMessage == null) context.pop();
+    if (mounted && ref.read(urlsProvider).errorMessage == null) {
+      HapticFeedback.lightImpact();
+      context.pop();
+    }
   }
 
   @override
@@ -40,64 +45,83 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
     return CyberScaffold(
       title: "NEW DEPLOYMENT",
       body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: GlassCard(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Icon(
-                      PhosphorIconsThin.rocketLaunch,
-                      size: 64,
-                      color: txtColor,
-                    ),
-                    const SizedBox(height: 32),
-                    StealthInput(
-                      label: "Target URL",
-                      icon: PhosphorIconsBold.link,
-                      controller: _urlController,
-                      validator: (v) => v?.isEmpty == true ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Switch(
-                          value: _useCustomCode,
-                          onChanged: (v) => setState(() => _useCustomCode = v),
-                          activeColor: theme.scaffoldBackgroundColor,
-                          activeTrackColor: txtColor,
-                          inactiveThumbColor: txtColor.withValues(alpha: 0.5),
-                          inactiveTrackColor: txtColor.withValues(alpha: 0.1),
-                        ),
-                        const SizedBox(width: 8),
-                        Text("Custom Alias", style: TextStyle(color: txtColor)),
-                      ],
-                    ),
-                    if (_useCustomCode) ...[
-                      const SizedBox(height: 16),
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.scale(
+                scale: 0.95 + (0.05 * value),
+                child: child,
+              ),
+            );
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: GlassCard(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Icon(
+                        PhosphorIconsThin.rocketLaunch,
+                        size: 64,
+                        color: txtColor,
+                      ),
+                      const SizedBox(height: 32),
                       StealthInput(
-                        label: "Alias",
-                        icon: PhosphorIconsBold.tag,
-                        controller: _codeController,
+                        label: "Target URL",
+                        icon: PhosphorIconsBold.link,
+                        controller: _urlController,
+                        validator: (v) =>
+                            v?.isEmpty == true ? 'Required' : null,
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Switch(
+                            value: _useCustomCode,
+                            onChanged: (v) =>
+                                setState(() => _useCustomCode = v),
+                            activeColor: theme.scaffoldBackgroundColor,
+                            activeTrackColor: txtColor,
+                            inactiveThumbColor: txtColor.withValues(alpha: 0.5),
+                            inactiveTrackColor: txtColor.withValues(alpha: 0.1),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Custom Alias",
+                            style: TextStyle(color: txtColor),
+                          ),
+                        ],
+                      ),
+                      if (_useCustomCode) ...[
+                        const SizedBox(height: 16),
+                        StealthInput(
+                          label: "Alias",
+                          icon: PhosphorIconsBold.tag,
+                          controller: _codeController,
+                        ),
+                      ],
+                      const SizedBox(height: 32),
+                      PhysicsButton(
+                        onPressed: ref.watch(urlsProvider).isLoading
+                            ? null
+                            : _submit,
+                        child: ref.watch(urlsProvider).isLoading
+                            ? CircularProgressIndicator(
+                                color: theme.scaffoldBackgroundColor,
+                              )
+                            : const Text("INITIALIZE"),
                       ),
                     ],
-                    const SizedBox(height: 32),
-                    PhysicsButton(
-                      onPressed: ref.watch(urlsProvider).isLoading
-                          ? null
-                          : _submit,
-                      child: ref.watch(urlsProvider).isLoading
-                          ? CircularProgressIndicator(
-                              color: theme.scaffoldBackgroundColor,
-                            )
-                          : const Text("INITIALIZE"),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
