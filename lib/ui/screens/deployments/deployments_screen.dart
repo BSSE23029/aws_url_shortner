@@ -36,6 +36,7 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
     final theme = Theme.of(context);
     final color = theme.colorScheme.onSurface;
     final isDark = theme.brightness == Brightness.dark;
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     // Filter and sort URLs
     var filteredUrls = urlsState.urls.where((url) {
@@ -75,7 +76,7 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
           children: [
             // Header Section
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(isMobile ? 16 : 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -84,15 +85,19 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
                       Icon(
                         PhosphorIconsRegular.package,
                         color: Colors.cyanAccent,
-                        size: 28,
+                        size: isMobile ? 24 : 28,
                       ),
                       const SizedBox(width: 12),
-                      const Text(
-                        'ACTIVE DEPLOYMENTS',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
+                      Flexible(
+                        child: Text(
+                          'ACTIVE DEPLOYMENTS',
+                          style: TextStyle(
+                            fontSize: isMobile ? 18 : 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: isMobile ? 1 : 2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -106,7 +111,7 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
                       fontFamily: 'Courier',
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: isMobile ? 16 : 24),
 
                   // Search and Filter Row
                   Row(
@@ -225,8 +230,8 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 16 : 24,
                         vertical: 8,
                       ),
                       itemCount: filteredUrls.length,
@@ -249,12 +254,13 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
     BuildContext context,
   ) {
     final daysSinceCreation = DateTime.now().difference(url.createdAt).inDays;
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
       child: GlassCard(
         onTap: () => context.push('/url-details', extra: url),
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(isMobile ? 16 : 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -266,29 +272,29 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
                   child: Row(
                     children: [
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: isMobile ? 36 : 40,
+                        height: isMobile ? 36 : 40,
                         decoration: BoxDecoration(
                           color: Colors.cyanAccent.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           PhosphorIconsRegular.link,
                           color: Colors.cyanAccent,
-                          size: 20,
+                          size: isMobile ? 18 : 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: isMobile ? 10 : 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               url.shortCode.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 16,
+                              style: TextStyle(
+                                fontSize: isMobile ? 14 : 16,
                                 fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
+                                letterSpacing: isMobile ? 0.5 : 1,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -359,31 +365,60 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
             const SizedBox(height: 16),
 
             // Stats Row
-            Row(
-              children: [
-                _buildStatPill(
-                  PhosphorIconsRegular.eye,
-                  '${url.clickCount}',
-                  'CLICKS',
-                  Colors.cyanAccent,
-                  color,
-                ),
-                const SizedBox(width: 12),
-                _buildStatPill(
-                  PhosphorIconsRegular.calendar,
-                  _formatDate(url.createdAt),
-                  'CREATED',
-                  Colors.purpleAccent,
-                  color,
-                ),
-              ],
-            ),
+            if (isMobile)
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      _buildStatPill(
+                        PhosphorIconsRegular.eye,
+                        '${url.clickCount}',
+                        'CLICKS',
+                        Colors.cyanAccent,
+                        color,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _buildStatPill(
+                        PhosphorIconsRegular.calendar,
+                        _formatDate(url.createdAt),
+                        'CREATED',
+                        Colors.purpleAccent,
+                        color,
+                      ),
+                    ],
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  _buildStatPill(
+                    PhosphorIconsRegular.eye,
+                    '${url.clickCount}',
+                    'CLICKS',
+                    Colors.cyanAccent,
+                    color,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildStatPill(
+                    PhosphorIconsRegular.calendar,
+                    _formatDate(url.createdAt),
+                    'CREATED',
+                    Colors.purpleAccent,
+                    color,
+                  ),
+                ],
+              ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: isMobile ? 12 : 16),
 
             // Mini Chart
             SizedBox(
-              height: 40,
+              height: isMobile ? 30 : 40,
               child: charts.SfCartesianChart(
                 margin: EdgeInsets.zero,
                 plotAreaBorderWidth: 0,
@@ -414,9 +449,13 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
     Color accentColor,
     Color baseColor,
   ) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 10 : 12,
+          vertical: isMobile ? 8 : 10,
+        ),
         decoration: BoxDecoration(
           color: accentColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
@@ -425,8 +464,8 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: accentColor),
-            const SizedBox(width: 8),
+            Icon(icon, size: isMobile ? 14 : 16, color: accentColor),
+            SizedBox(width: isMobile ? 6 : 8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,7 +473,7 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
                   Text(
                     value,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: isMobile ? 12 : 14,
                       fontWeight: FontWeight.bold,
                       color: accentColor,
                       fontFamily: 'Courier',
@@ -444,7 +483,7 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: 8,
+                      fontSize: isMobile ? 7 : 8,
                       color: baseColor.withValues(alpha: 0.5),
                       fontWeight: FontWeight.bold,
                     ),

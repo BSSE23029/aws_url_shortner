@@ -64,6 +64,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       debugPrint(
         "🗺️ GeoDistribution data: ${urlsState.globalStats.geoDistribution}",
       );
+      debugPrint(
+        "🗺️ Total features to process: ${features.length}",
+      );
+      debugPrint(
+        "🗺️ GeoDistribution keys: ${urlsState.globalStats.geoDistribution.keys.toList()}",
+      );
 
       for (var feature in features) {
         final props = feature['properties'];
@@ -78,9 +84,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             ? (urlsState.globalStats.geoDistribution[isoCode] ?? 0)
             : 0;
 
+        // Debug: Log ALL countries being processed
+        debugPrint(
+          "🗺️ Processing '$countryName' (ISO: $isoCode) - Clicks: $clicks - Has Data: ${urlsState.globalStats.geoDistribution.containsKey(isoCode)}",
+        );
+
         if (clicks > 0) {
           debugPrint(
-            "🗺️ Country '$countryName' (ISO: $isoCode) has $clicks clicks - Color: ${_getMapColor(clicks)}",
+            "✅ Country '$countryName' (ISO: $isoCode) has $clicks clicks - Color: ${_getMapColor(clicks)}",
           );
         }
 
@@ -171,11 +182,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     return Colors.cyanAccent.withValues(alpha: 0.25);
   }
 
-  Widget _buildGlobalMap(UrlsState state, Color color) {
+  Widget _buildGlobalMap(UrlsState state, Color color, bool isMobile) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (_cachedPolygons == null) {
       return GlassCard(
-        height: 320,
+        height: isMobile ? 250 : 320,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -198,7 +209,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     }
 
     return GlassCard(
-      height: 320,
+      height: isMobile ? 250 : 320,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Stack(
@@ -389,13 +400,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     final theme = Theme.of(context);
     final color = theme.colorScheme.onSurface;
     final globalStats = urlsState.globalStats;
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return CyberScaffold(
       enableBack: false,
       body: RefreshIndicator(
         onRefresh: () => ref.read(urlsProvider.notifier).loadDashboard(),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(isMobile ? 16 : 24),
           child: Column(
             children: [
               // Show loading state
@@ -403,54 +415,73 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 _buildLoadingSkeleton(color)
               else ...[
                 // SYSTEM OVERVIEW CARDS
-                _section("SYSTEM_CORE", "GLOBAL NETWORK STATISTICS"),
-                const SizedBox(height: 16),
-                _buildSystemOverview(globalStats, color),
+                _section("SYSTEM_CORE", "GLOBAL NETWORK STATISTICS", isMobile),
+                SizedBox(height: isMobile ? 12 : 16),
+                _buildSystemOverview(globalStats, color, isMobile),
 
-                const SizedBox(height: 32),
+                SizedBox(height: isMobile ? 24 : 32),
                 _section(
                   "GEOGRAPHICAL_INTELLIGENCE",
                   "WORLDWIDE TRAFFIC DENSITY",
+                  isMobile,
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(flex: 2, child: _buildGlobalMap(urlsState, color)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildGeoBreakdown(globalStats, color)),
-                  ],
-                ),
+                SizedBox(height: isMobile ? 12 : 16),
+                if (isMobile)
+                  Column(
+                    children: [
+                      _buildGlobalMap(urlsState, color, isMobile),
+                      const SizedBox(height: 16),
+                      _buildGeoBreakdown(globalStats, color, isMobile),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      Expanded(flex: 2, child: _buildGlobalMap(urlsState, color, isMobile)),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildGeoBreakdown(globalStats, color, isMobile)),
+                    ],
+                  ),
 
-                const SizedBox(height: 32),
-                _section("PLATFORM_ANALYTICS", "OPERATING SYSTEM DISTRIBUTION"),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(child: _buildOsChart(globalStats)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildOsMetrics(globalStats, color)),
-                  ],
-                ),
+                SizedBox(height: isMobile ? 24 : 32),
+                _section("PLATFORM_ANALYTICS", "OPERATING SYSTEM DISTRIBUTION", isMobile),
+                SizedBox(height: isMobile ? 12 : 16),
+                if (isMobile)
+                  Column(
+                    children: [
+                      _buildOsChart(globalStats, isMobile),
+                      const SizedBox(height: 16),
+                      _buildOsMetrics(globalStats, color, isMobile),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      Expanded(child: _buildOsChart(globalStats, isMobile)),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildOsMetrics(globalStats, color, isMobile)),
+                    ],
+                  ),
 
-                const SizedBox(height: 32),
-                _section("TEMPORAL_PULSE", "HOURLY TRAFFIC FREQUENCY"),
-                const SizedBox(height: 16),
-                _buildHourlyChart(urlsState),
+                SizedBox(height: isMobile ? 24 : 32),
+                _section("TEMPORAL_PULSE", "HOURLY TRAFFIC FREQUENCY", isMobile),
+                SizedBox(height: isMobile ? 12 : 16),
+                _buildHourlyChart(urlsState, isMobile),
 
-                const SizedBox(height: 32),
-                _section("NETWORK_DNA", "MULTI-DIMENSIONAL PERFORMANCE"),
-                const SizedBox(height: 16),
-                _buildRadarChart(),
+                SizedBox(height: isMobile ? 24 : 32),
+                _section("NETWORK_DNA", "MULTI-DIMENSIONAL PERFORMANCE", isMobile),
+                SizedBox(height: isMobile ? 12 : 16),
+                _buildRadarChart(isMobile),
 
-                const SizedBox(height: 32),
-                _section("SYSTEM_VOLATILITY", "PEAK VS AVERAGE LOAD"),
-                const SizedBox(height: 16),
-                _buildLinearGauge(0.65, color),
+                SizedBox(height: isMobile ? 24 : 32),
+                _section("SYSTEM_VOLATILITY", "PEAK VS AVERAGE LOAD", isMobile),
+                SizedBox(height: isMobile ? 12 : 16),
+                _buildLinearGauge(0.65, color, isMobile),
 
-                const SizedBox(height: 32),
-                _section("ENGAGEMENT_MATRIX", "CLICK-THROUGH EFFICIENCY"),
-                const SizedBox(height: 16),
-                _buildEngagementMetrics(urlsState, color),
+                SizedBox(height: isMobile ? 24 : 32),
+                _section("ENGAGEMENT_MATRIX", "CLICK-THROUGH EFFICIENCY", isMobile),
+                SizedBox(height: isMobile ? 12 : 16),
+                _buildEngagementMetrics(urlsState, color, isMobile),
               ],
             ],
           ),
@@ -460,27 +491,39 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   Widget _buildLoadingSkeleton(Color color) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return Column(
       children: [
-        _section("LOADING", "FETCHING NETWORK STATISTICS"),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(child: _buildSkeletonCard(120, color)),
-            const SizedBox(width: 16),
-            Expanded(child: _buildSkeletonCard(120, color)),
-            const SizedBox(width: 16),
-            Expanded(child: _buildSkeletonCard(120, color)),
-          ],
-        ),
-        const SizedBox(height: 32),
-        _section("GEOGRAPHICAL_INTELLIGENCE", "LOADING MAP DATA"),
-        const SizedBox(height: 16),
-        _buildSkeletonCard(320, color),
-        const SizedBox(height: 32),
-        _section("PLATFORM_ANALYTICS", "PREPARING CHARTS"),
-        const SizedBox(height: 16),
-        _buildSkeletonCard(280, color),
+        _section("LOADING", "FETCHING NETWORK STATISTICS", isMobile),
+        SizedBox(height: isMobile ? 12 : 16),
+        if (isMobile)
+          Column(
+            children: [
+              _buildSkeletonCard(isMobile ? 100 : 120, color),
+              const SizedBox(height: 12),
+              _buildSkeletonCard(isMobile ? 100 : 120, color),
+              const SizedBox(height: 12),
+              _buildSkeletonCard(isMobile ? 100 : 120, color),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(child: _buildSkeletonCard(120, color)),
+              const SizedBox(width: 16),
+              Expanded(child: _buildSkeletonCard(120, color)),
+              const SizedBox(width: 16),
+              Expanded(child: _buildSkeletonCard(120, color)),
+            ],
+          ),
+        SizedBox(height: isMobile ? 24 : 32),
+        _section("GEOGRAPHICAL_INTELLIGENCE", "LOADING MAP DATA", isMobile),
+        SizedBox(height: isMobile ? 12 : 16),
+        _buildSkeletonCard(isMobile ? 250 : 320, color),
+        SizedBox(height: isMobile ? 24 : 32),
+        _section("PLATFORM_ANALYTICS", "PREPARING CHARTS", isMobile),
+        SizedBox(height: isMobile ? 12 : 16),
+        _buildSkeletonCard(isMobile ? 220 : 280, color),
         const SizedBox(height: 100),
         Center(
           child: Column(
@@ -540,7 +583,42 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildSystemOverview(GlobalStatsModel stats, Color color) {
+  Widget _buildSystemOverview(GlobalStatsModel stats, Color color, bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildMetricCard(
+            "TOTAL_LINKS",
+            "${stats.totalSystemLinks}",
+            PhosphorIconsRegular.link,
+            Colors.cyanAccent,
+            "DEPLOYED",
+            isMobile,
+          ),
+          const SizedBox(height: 12),
+          _buildMetricCard(
+            "TOTAL_CLICKS",
+            "${stats.totalSystemClicks}",
+            PhosphorIconsRegular.lightning,
+            Colors.amber,
+            "REQUESTS",
+            isMobile,
+          ),
+          const SizedBox(height: 12),
+          _buildMetricCard(
+            "AVG_CTR",
+            stats.totalSystemLinks > 0
+                ? (stats.totalSystemClicks / stats.totalSystemLinks)
+                      .toStringAsFixed(1)
+                : '0',
+            PhosphorIconsRegular.chartBar,
+            Colors.greenAccent,
+            "PER LINK",
+            isMobile,
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
         Expanded(
@@ -550,6 +628,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             PhosphorIconsRegular.link,
             Colors.cyanAccent,
             "DEPLOYED",
+            isMobile,
           ),
         ),
         const SizedBox(width: 16),
@@ -560,6 +639,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             PhosphorIconsRegular.lightning,
             Colors.amber,
             "REQUESTS",
+            isMobile,
           ),
         ),
         const SizedBox(width: 16),
@@ -573,6 +653,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             PhosphorIconsRegular.chartBar,
             Colors.greenAccent,
             "PER LINK",
+            isMobile,
           ),
         ),
       ],
@@ -585,33 +666,38 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     IconData icon,
     Color accentColor,
     String suffix,
+    bool isMobile,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                  color: isDark ? Colors.white60 : Colors.black54,
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: isMobile ? 10 : 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: isMobile ? 1 : 1.5,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Icon(icon, color: accentColor, size: 24),
+              Icon(icon, color: accentColor, size: isMobile ? 20 : 24),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isMobile ? 10 : 12),
           Text(
             value,
             style: TextStyle(
-              fontSize: 32,
+              fontSize: isMobile ? 24 : 32,
               fontWeight: FontWeight.bold,
               color: accentColor,
             ),
@@ -630,13 +716,13 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildGeoBreakdown(GlobalStatsModel stats, Color color) {
+  Widget _buildGeoBreakdown(GlobalStatsModel stats, Color color, bool isMobile) {
     final sortedGeo = stats.geoDistribution.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return GlassCard(
-      height: 320,
-      padding: const EdgeInsets.all(20),
+      height: isMobile ? 250 : 320,
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -703,14 +789,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildOsChart(GlobalStatsModel stats) {
+  Widget _buildOsChart(GlobalStatsModel stats, bool isMobile) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final osData = stats.osDistribution.entries
         .map((e) => _ChartData(e.key, e.value.toDouble()))
         .toList();
 
     return GlassCard(
-      height: 280,
+      height: isMobile ? 220 : 280,
       child: charts.SfCircularChart(
         title: const charts.ChartTitle(
           text: 'OS DISTRIBUTION',
@@ -747,13 +833,13 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildOsMetrics(GlobalStatsModel stats, Color color) {
+  Widget _buildOsMetrics(GlobalStatsModel stats, Color color, bool isMobile) {
     final sortedOs = stats.osDistribution.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return GlassCard(
-      height: 280,
-      padding: const EdgeInsets.all(20),
+      height: isMobile ? 220 : 280,
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -827,7 +913,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildEngagementMetrics(UrlsState state, Color color) {
+  Widget _buildEngagementMetrics(UrlsState state, Color color, bool isMobile) {
     final avgClicks = state.urls.isEmpty
         ? 0
         : state.myTotalClicks / state.urls.length;
@@ -837,6 +923,114 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     final leastClicked = state.urls.isEmpty
         ? null
         : state.urls.reduce((a, b) => a.clickCount < b.clickCount ? a : b);
+
+    if (isMobile) {
+      return Column(
+        children: [
+          GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "AVG CLICKS/LINK",
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  avgClicks.toStringAsFixed(2),
+                  style: TextStyle(
+                    fontSize: isMobile ? 28 : 36,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.purpleAccent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "TOP PERFORMER",
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (mostClicked != null) ...[
+                  Text(
+                    "${mostClicked.clickCount}",
+                    style: TextStyle(
+                      fontSize: isMobile ? 28 : 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.greenAccent,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    mostClicked.shortCode,
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: color.withValues(alpha: 0.5),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ] else
+                  const Text("N/A", style: TextStyle(fontSize: 24)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "NEEDS BOOST",
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (leastClicked != null) ...[
+                  Text(
+                    "${leastClicked.clickCount}",
+                    style: TextStyle(
+                      fontSize: isMobile ? 28 : 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    leastClicked.shortCode,
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: color.withValues(alpha: 0.5),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ] else
+                  const Text("N/A", style: TextStyle(fontSize: 24)),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
 
     return Row(
       children: [
@@ -951,9 +1145,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildHourlyChart(UrlsState state) {
+  Widget _buildHourlyChart(UrlsState state, bool isMobile) {
     return GlassCard(
-      height: 250,
+      height: isMobile ? 200 : 250,
       child: charts.SfCartesianChart(
         primaryXAxis: charts.NumericAxis(
           title: const charts.AxisTitle(
@@ -983,7 +1177,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildRadarChart() {
+  Widget _buildRadarChart(bool isMobile) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final data = [
       _ChartData('SPEED', 0.9),
@@ -994,7 +1188,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     ];
 
     return GlassCard(
-      height: 300,
+      height: isMobile ? 220 : 300,
       child: charts.SfCartesianChart(
         primaryXAxis: charts.CategoryAxis(
           labelStyle: TextStyle(
@@ -1026,9 +1220,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildLinearGauge(double val, Color color) {
+  Widget _buildLinearGauge(double val, Color color, bool isMobile) {
     return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 24 : 32,
+      ),
       child: gauges.SfLinearGauge(
         minimum: 0,
         maximum: 100,
@@ -1048,7 +1245,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _section(String title, String sub) {
+  Widget _section(String title, String sub, bool isMobile) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: Alignment.centerLeft,
@@ -1057,19 +1254,23 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 16,
-              letterSpacing: 2,
+              fontSize: isMobile ? 14 : 16,
+              letterSpacing: isMobile ? 1 : 2,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           Text(
             sub,
             style: TextStyle(
-              fontSize: 9,
+              fontSize: isMobile ? 8 : 9,
               color: isDark ? Colors.white24 : Colors.black38,
               fontFamily: 'Courier',
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -1462,11 +1663,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   Color _getOsColor(String os) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (os.toLowerCase()) {
       case 'android':
         return Colors.greenAccent;
       case 'ios':
-        return Colors.white;
+        return isDark ? Colors.white : Colors.black87;
       case 'windows':
         return Colors.blueAccent;
       case 'macos':
@@ -1474,7 +1676,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       case 'linux':
         return Colors.orangeAccent;
       default:
-        return Colors.white60;
+        return isDark ? Colors.white60 : Colors.black54;
     }
   }
 }

@@ -42,6 +42,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final authState = ref.watch(authProvider);
     final theme = Theme.of(context);
     final txtColor = theme.colorScheme.onSurface;
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return CyberScaffold(
       enableBack: false,
@@ -54,55 +55,87 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       body: RefreshIndicator(
         onRefresh: () => ref.read(urlsProvider.notifier).loadDashboard(),
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(isMobile ? 16 : 24),
           children: [
             _buildCipherHeader(authState.user, txtColor),
-            const SizedBox(height: 24),
+            SizedBox(height: isMobile ? 16 : 24),
 
-            // QUICK STATS ROW
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    "SYSTEM_IO",
-                    "${urlsState.urls.length}",
-                    PhosphorIconsRegular.cpu,
-                    txtColor,
+            // QUICK STATS - Responsive Layout
+            if (isMobile) ...[
+              // Mobile: 2x2 Grid
+              _buildStatCard(
+                "SYSTEM_IO",
+                "${urlsState.urls.length}",
+                PhosphorIconsRegular.cpu,
+                txtColor,
+              ),
+              const SizedBox(height: 12),
+              _buildStatCard(
+                "NETWORK_TX",
+                "${urlsState.myTotalClicks}",
+                PhosphorIconsRegular.lightning,
+                txtColor,
+              ),
+              const SizedBox(height: 12),
+              _buildStatCard(
+                "GLOBAL_LINKS",
+                "${urlsState.globalStats.totalSystemLinks}",
+                PhosphorIconsRegular.globe,
+                txtColor,
+              ),
+              const SizedBox(height: 12),
+              _buildStatCard(
+                "GLOBAL_CLICKS",
+                "${urlsState.globalStats.totalSystemClicks}",
+                PhosphorIconsRegular.chartLine,
+                txtColor,
+              ),
+            ] else ...[
+              // Desktop: 2x2 Row Layout
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      "SYSTEM_IO",
+                      "${urlsState.urls.length}",
+                      PhosphorIconsRegular.cpu,
+                      txtColor,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    "NETWORK_TX",
-                    "${urlsState.myTotalClicks}",
-                    PhosphorIconsRegular.lightning,
-                    txtColor,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildStatCard(
+                      "NETWORK_TX",
+                      "${urlsState.myTotalClicks}",
+                      PhosphorIconsRegular.lightning,
+                      txtColor,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    "GLOBAL_LINKS",
-                    "${urlsState.globalStats.totalSystemLinks}",
-                    PhosphorIconsRegular.globe,
-                    txtColor,
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      "GLOBAL_LINKS",
+                      "${urlsState.globalStats.totalSystemLinks}",
+                      PhosphorIconsRegular.globe,
+                      txtColor,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    "GLOBAL_CLICKS",
-                    "${urlsState.globalStats.totalSystemClicks}",
-                    PhosphorIconsRegular.chartLine,
-                    txtColor,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildStatCard(
+                      "GLOBAL_CLICKS",
+                      "${urlsState.globalStats.totalSystemClicks}",
+                      PhosphorIconsRegular.chartLine,
+                      txtColor,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
 
             const SizedBox(height: 32),
             _buildPerformanceIndicators(urlsState, txtColor),
@@ -116,7 +149,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               children: [
                 _buildListHeader(txtColor),
                 TextButton.icon(
-                  onPressed: () => context.push('/deployments'),
+                  onPressed: () => context.go('/deployments'),
                   icon: const Icon(PhosphorIconsRegular.arrowRight, size: 16),
                   label: const Text(
                     'VIEW ALL',
@@ -176,41 +209,49 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildCipherHeader(UserModel? user, Color color) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return GlassCard(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "USER_SESSION: ${user?.name?.toUpperCase() ?? 'GUEST'}",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: color,
-                      letterSpacing: 1,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "USER_SESSION: ${user?.name?.toUpperCase() ?? 'GUEST'}",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: isMobile ? 14 : 16,
+                        color: color,
+                        letterSpacing: 1,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const Text(
-                    "STATUS: AUTHENTICATED // ENCRYPTED",
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: Colors.greenAccent,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Courier',
+                    Text(
+                      "STATUS: AUTHENTICATED // ENCRYPTED",
+                      style: TextStyle(
+                        fontSize: isMobile ? 8 : 9,
+                        color: Colors.greenAccent,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Courier',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const Icon(
+              const SizedBox(width: 12),
+              Icon(
                 PhosphorIconsFill.shieldCheck,
                 color: Colors.greenAccent,
-                size: 28,
+                size: isMobile ? 24 : 28,
               ),
             ],
           ),
@@ -274,8 +315,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     Color color,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return GlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 14 : 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -432,9 +474,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final performance = systemAvg > 0
         ? (avgClicks / systemAvg * 100).clamp(0, 200)
         : 100;
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return GlassCard(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -442,50 +485,83 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             children: [
               Icon(PhosphorIconsRegular.trendUp, color: color, size: 16),
               const SizedBox(width: 8),
-              const Text(
-                "PERFORMANCE_MATRIX",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
+              Flexible(
+                child: Text(
+                  "PERFORMANCE_MATRIX",
+                  style: TextStyle(
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: isMobile ? 1 : 1.5,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _buildIndicator(
+          SizedBox(height: isMobile ? 16 : 20),
+          if (isMobile)
+            Column(
+              children: [
+                _buildIndicator(
                   "YOUR AVG",
                   avgClicks.toStringAsFixed(1),
                   "clicks/link",
                   Colors.cyanAccent,
                   color,
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildIndicator(
+                const SizedBox(height: 16),
+                _buildIndicator(
                   "SYSTEM AVG",
                   systemAvg.toStringAsFixed(1),
                   "clicks/link",
                   Colors.purpleAccent,
                   color,
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildIndicator(
+                const SizedBox(height: 16),
+                _buildIndicator(
                   "PERFORMANCE",
                   "${performance.toStringAsFixed(0)}%",
                   performance > 100 ? "above average" : "below average",
                   performance > 100 ? Colors.greenAccent : Colors.orangeAccent,
                   color,
                 ),
-              ),
-            ],
-          ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: _buildIndicator(
+                    "YOUR AVG",
+                    avgClicks.toStringAsFixed(1),
+                    "clicks/link",
+                    Colors.cyanAccent,
+                    color,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildIndicator(
+                    "SYSTEM AVG",
+                    systemAvg.toStringAsFixed(1),
+                    "clicks/link",
+                    Colors.purpleAccent,
+                    color,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildIndicator(
+                    "PERFORMANCE",
+                    "${performance.toStringAsFixed(0)}%",
+                    performance > 100 ? "above average" : "below average",
+                    performance > 100
+                        ? Colors.greenAccent
+                        : Colors.orangeAccent,
+                    color,
+                  ),
+                ),
+              ],
+            ),
           const SizedBox(height: 20),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -548,9 +624,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final sortedUrls = List<UrlModel>.from(state.urls)
       ..sort((a, b) => b.clickCount.compareTo(a.clickCount));
     final topUrls = sortedUrls.take(3).toList();
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return GlassCard(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
