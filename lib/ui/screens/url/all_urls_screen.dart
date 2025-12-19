@@ -15,11 +15,18 @@ class AllUrlsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final urlsState = ref.watch(urlsProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final iconColor = isDark ? Colors.white54 : Colors.black54;
+    final subtextColor = isDark ? Colors.white38 : Colors.black45;
+    final chevronColor = isDark ? Colors.white24 : Colors.black26;
 
     return CyberScaffold(
       title: "ARCHIVES",
       body: urlsState.isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.cyanAccent),
+            )
           : ListView.builder(
               padding: const EdgeInsets.all(20),
               itemCount: urlsState.urls.length,
@@ -45,7 +52,7 @@ class AllUrlsScreen extends ConsumerWidget {
                       onTap: () => context.push('/url-details', extra: url),
                       child: Row(
                         children: [
-                          Icon(PhosphorIconsBold.link, color: Colors.white54),
+                          Icon(PhosphorIconsBold.link, color: iconColor),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
@@ -53,17 +60,17 @@ class AllUrlsScreen extends ConsumerWidget {
                               children: [
                                 Text(
                                   url.shortUrl,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: theme.colorScheme.onSurface,
                                   ),
                                 ),
                                 Text(
                                   url.originalUrl,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white38,
+                                  style: TextStyle(
+                                    color: subtextColor,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -73,7 +80,7 @@ class AllUrlsScreen extends ConsumerWidget {
                           IconButton(
                             icon: Icon(
                               PhosphorIconsBold.copy,
-                              color: Colors.white54,
+                              color: iconColor,
                               size: 20,
                             ),
                             onPressed: () async {
@@ -92,7 +99,7 @@ class AllUrlsScreen extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Icon(
                             PhosphorIconsBold.caretRight,
-                            color: Colors.white24,
+                            color: chevronColor,
                           ),
                         ],
                       ),

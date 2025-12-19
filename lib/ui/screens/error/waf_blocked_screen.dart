@@ -11,6 +11,15 @@ class WafBlockedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.colorScheme.onSurface;
+    final subtextColor = isDark ? Colors.white54 : Colors.black54;
+    final borderColor = isDark ? Colors.white10 : Colors.black12;
+    final bgColor = isDark
+        ? Colors.black26
+        : Colors.white.withValues(alpha: 0.3);
+
     return CyberScaffold(
       enableBack: false,
       body: Center(
@@ -35,10 +44,10 @@ class WafBlockedScreen extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  const Text(
+                  Text(
                     "Access Denied",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: textColor,
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
@@ -47,11 +56,11 @@ class WafBlockedScreen extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  const Text(
+                  Text(
                     "Our security perimeter flagged this request. If you believe this is an error, contact the administrator.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white54,
+                      color: subtextColor,
                       fontSize: 16,
                       height: 1.5,
                     ),
@@ -66,9 +75,9 @@ class WafBlockedScreen extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white10),
+                      border: Border.all(color: borderColor),
                       borderRadius: BorderRadius.circular(8),
-                      color: Colors.black26,
+                      color: bgColor,
                     ),
                     child: const Text(
                       "REF: WAF-BLOCK-7X9",
@@ -86,11 +95,11 @@ class WafBlockedScreen extends StatelessWidget {
 
                   PhysicsButton(
                     onPressed: () => context.go('/dashboard'),
-                    backgroundColor: Colors.white,
-                    child: const Text(
+                    backgroundColor: isDark ? Colors.white : Colors.black,
+                    child: Text(
                       "RETURN TO SAFETY",
                       style: TextStyle(
-                        color: Colors.black,
+                        color: isDark ? Colors.black : Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

@@ -273,6 +273,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     IconData icon,
     Color color,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -302,7 +303,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             height: 20,
             child: SfSparkLineChart(
               data: const [1, 5, 3, 9, 4, 8, 6],
-              color: Colors.cyanAccent.withValues(alpha: 0.5),
+              color: Colors.cyanAccent.withValues(alpha: isDark ? 0.5 : 0.7),
             ),
           ),
         ],
@@ -311,6 +312,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildUrlItem(UrlModel u, Color color) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassCard(
@@ -332,7 +334,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 u.originalUrl,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10, color: Colors.white24),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: color.withValues(alpha: 0.3),
+                ),
               ),
               trailing: Text(
                 "${u.clickCount}",
@@ -354,7 +359,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     dataSource: const [1, 4, 2, 7, 3, 9, 5, 8],
                     xValueMapper: (double d, i) => i,
                     yValueMapper: (double d, _) => d,
-                    color: Colors.cyanAccent.withValues(alpha: 0.1),
+                    color: Colors.cyanAccent.withValues(
+                      alpha: isDark ? 0.1 : 0.2,
+                    ),
                   ),
                 ],
               ),
@@ -366,6 +373,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildMiniRadial(int val) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       width: 30,
       height: 30,
@@ -376,9 +384,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             showTicks: false,
             startAngle: 270,
             endAngle: 270,
-            axisLineStyle: const gauges.AxisLineStyle(
+            axisLineStyle: gauges.AxisLineStyle(
               thickness: 0.2,
-              color: Colors.white10,
+              color: isDark ? Colors.white10 : Colors.black12,
               thicknessUnit: gauges.GaugeSizeUnit.factor,
             ),
             pointers: [
@@ -525,7 +533,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Text(unit, style: const TextStyle(fontSize: 8, color: Colors.white30)),
+        Text(
+          unit,
+          style: TextStyle(
+            fontSize: 8,
+            color: baseColor.withValues(alpha: 0.3),
+          ),
+        ),
       ],
     );
   }
@@ -573,12 +587,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           const SizedBox(height: 16),
           if (topUrls.isEmpty)
-            const Center(
+            Center(
               child: Padding(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 child: Text(
                   "NO DATA AVAILABLE",
-                  style: TextStyle(fontSize: 10, color: Colors.white24),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: color.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
             )

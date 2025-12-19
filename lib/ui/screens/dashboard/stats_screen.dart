@@ -172,6 +172,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   Widget _buildGlobalMap(UrlsState state, Color color) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (_cachedPolygons == null) {
       return GlassCard(
         height: 320,
@@ -202,17 +203,23 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         borderRadius: BorderRadius.circular(12),
         child: Stack(
           children: [
-            // Dark cyberpunk background - deeper space theme
+            // Adaptive background - deep space for dark, light blue for light
             Container(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   center: Alignment.center,
                   radius: 1.5,
-                  colors: [
-                    const Color(0xFF001F3F), // Deep navy center
-                    const Color(0xFF000814), // Almost black
-                    Colors.black,
-                  ],
+                  colors: isDark
+                      ? [
+                          const Color(0xFF001F3F), // Deep navy center
+                          const Color(0xFF000814), // Almost black
+                          Colors.black,
+                        ]
+                      : [
+                          const Color(0xFFB3E5FC), // Light blue center
+                          const Color(0xFF81D4FA), // Sky blue
+                          const Color(0xFF4FC3F7), // Medium blue
+                        ],
                 ),
               ),
             ),
@@ -252,7 +259,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: (isDark ? Colors.black : Colors.white).withValues(
+                    alpha: 0.85,
+                  ),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: Colors.cyanAccent.withValues(alpha: 0.3),
@@ -275,18 +284,22 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                     _buildLegendItem(
                       '5000+',
                       Colors.cyanAccent.withValues(alpha: 0.8),
+                      isDark,
                     ),
                     _buildLegendItem(
                       '1000+',
                       Colors.cyanAccent.withValues(alpha: 0.5),
+                      isDark,
                     ),
                     _buildLegendItem(
                       '100+',
                       Colors.cyanAccent.withValues(alpha: 0.3),
+                      isDark,
                     ),
                     _buildLegendItem(
                       '1+',
                       Colors.cyanAccent.withValues(alpha: 0.15),
+                      isDark,
                     ),
                   ],
                 ),
@@ -302,7 +315,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: (isDark ? Colors.black : Colors.white).withValues(
+                    alpha: 0.85,
+                  ),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: Colors.cyanAccent.withValues(alpha: 0.3),
@@ -337,7 +352,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
+  Widget _buildLegendItem(String label, Color color, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -357,9 +372,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 8,
-              color: Colors.white70,
+              color: isDark ? Colors.white70 : Colors.black87,
               fontFamily: 'Courier',
             ),
           ),
@@ -571,6 +586,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     Color accentColor,
     String suffix,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -581,11 +597,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
-                  color: Colors.white60,
+                  color: isDark ? Colors.white60 : Colors.black54,
                 ),
               ),
               Icon(icon, color: accentColor, size: 24),
@@ -603,9 +619,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           const SizedBox(height: 4),
           Text(
             suffix,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 9,
-              color: Colors.white30,
+              color: isDark ? Colors.white30 : Colors.black38,
               fontFamily: 'Courier',
             ),
           ),
@@ -688,6 +704,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   Widget _buildOsChart(GlobalStatsModel stats) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final osData = stats.osDistribution.entries
         .map((e) => _ChartData(e.key, e.value.toDouble()))
         .toList();
@@ -703,10 +720,13 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             letterSpacing: 1.2,
           ),
         ),
-        legend: const charts.Legend(
+        legend: charts.Legend(
           isVisible: true,
           position: charts.LegendPosition.bottom,
-          textStyle: TextStyle(fontSize: 9, color: Colors.white60),
+          textStyle: TextStyle(
+            fontSize: 9,
+            color: isDark ? Colors.white60 : Colors.black54,
+          ),
         ),
         series: <charts.CircularSeries>[
           charts.DoughnutSeries<_ChartData, String>(
@@ -964,6 +984,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   Widget _buildRadarChart() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final data = [
       _ChartData('SPEED', 0.9),
       _ChartData('VOL', 0.7),
@@ -975,9 +996,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     return GlassCard(
       height: 300,
       child: charts.SfCartesianChart(
-        primaryXAxis: const charts.CategoryAxis(
-          labelStyle: TextStyle(fontSize: 8, color: Colors.white24),
-          majorGridLines: charts.MajorGridLines(width: 0),
+        primaryXAxis: charts.CategoryAxis(
+          labelStyle: TextStyle(
+            fontSize: 8,
+            color: isDark ? Colors.white24 : Colors.black38,
+          ),
+          majorGridLines: const charts.MajorGridLines(width: 0),
         ),
         primaryYAxis: const charts.NumericAxis(
           minimum: 0,
@@ -1025,6 +1049,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   Widget _section(String title, String sub) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: Alignment.centerLeft,
       child: Column(
@@ -1040,9 +1065,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           ),
           Text(
             sub,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 9,
-              color: Colors.white24,
+              color: isDark ? Colors.white24 : Colors.black38,
               fontFamily: 'Courier',
             ),
           ),

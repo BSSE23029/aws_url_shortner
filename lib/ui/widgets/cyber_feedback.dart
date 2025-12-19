@@ -347,23 +347,20 @@ class _CyberSnackBarContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark 
+    final bgColor = isDark
         ? Colors.black.withValues(alpha: 0.95)
         : Colors.white.withValues(alpha: 0.98);
     final textColor = isDark ? Colors.white70 : Colors.black87;
-    final borderColor = isDark 
+    final borderColor = isDark
         ? _getAccentColor().withValues(alpha: 0.5)
         : _getAccentColor().withValues(alpha: 0.3);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: borderColor,
-          width: 1,
-        ),
+        border: Border.all(color: borderColor, width: 1),
         boxShadow: [
           BoxShadow(
             color: _getAccentColor().withValues(alpha: isDark ? 0.3 : 0.15),
@@ -399,10 +396,7 @@ class _CyberSnackBarContent extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  message,
-                  style: TextStyle(fontSize: 13, color: textColor),
-                ),
+                Text(message, style: TextStyle(fontSize: 13, color: textColor)),
               ],
             ),
           ),
@@ -517,16 +511,16 @@ class _CyberDesktopNotificationState extends State<_CyberDesktopNotification>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark 
+    final bgColor = isDark
         ? Colors.black.withValues(alpha: 0.95)
         : Colors.white.withValues(alpha: 0.98);
     final textColor = isDark ? Colors.white70 : Colors.black87;
-    final borderColor = isDark 
+    final borderColor = isDark
         ? _getAccentColor().withValues(alpha: 0.5)
         : _getAccentColor().withValues(alpha: 0.4);
     final shadowOpacity = isDark ? 0.3 : 0.15;
     final iconBgOpacity = isDark ? 0.2 : 0.1;
-    
+
     return Positioned(
       top: _getTop(),
       right: _getRight(),
@@ -547,10 +541,7 @@ class _CyberDesktopNotificationState extends State<_CyberDesktopNotification>
                 decoration: BoxDecoration(
                   color: bgColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: borderColor,
-                    width: 1.5,
-                  ),
+                  border: Border.all(color: borderColor, width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: _getAccentColor().withValues(alpha: shadowOpacity),
@@ -568,7 +559,9 @@ class _CyberDesktopNotificationState extends State<_CyberDesktopNotification>
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: _getAccentColor().withValues(alpha: iconBgOpacity),
+                            color: _getAccentColor().withValues(
+                              alpha: iconBgOpacity,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -622,8 +615,9 @@ class _CyberDesktopNotificationState extends State<_CyberDesktopNotification>
                         builder: (context, value, child) {
                           return LinearProgressIndicator(
                             value: value,
-                            backgroundColor: (isDark ? Colors.white : Colors.black)
-                                .withValues(alpha: 0.1),
+                            backgroundColor:
+                                (isDark ? Colors.white : Colors.black)
+                                    .withValues(alpha: 0.1),
                             valueColor: AlwaysStoppedAnimation(
                               _getAccentColor().withValues(alpha: 0.5),
                             ),

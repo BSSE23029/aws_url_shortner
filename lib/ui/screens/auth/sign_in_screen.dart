@@ -60,7 +60,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {
         CyberFeedback.authFailure(context);
-      } else if (next.isAuthenticated && !(previous?.isAuthenticated ?? false)) {
+      } else if (next.isAuthenticated &&
+          !(previous?.isAuthenticated ?? false)) {
         CyberFeedback.authSuccess(context, next.user?.name ?? 'Operator');
       }
     });
