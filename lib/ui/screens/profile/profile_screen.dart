@@ -9,7 +9,9 @@ import '../../widgets/stealth_input.dart';
 import '../../../providers/providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key}); 
+
+  
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
