@@ -56,8 +56,8 @@ class ThemeNotifier extends StateNotifier<ThemeSettings> {
     final prefs = await SharedPreferences.getInstance();
     _log("✅ SharedPreferences instance obtained");
 
-    // final modeIndex = prefs.getInt('theme_mode') ?? 0;
-    final modeIndex = prefs.getInt('theme_mode') ?? 1;
+    final modeIndex = prefs.getInt('theme_mode') ?? 0;
+    // final modeIndex = prefs.getInt('theme_mode') ?? 1;
     _log("🎨 Theme mode index from storage: $modeIndex");
     ThemeMode mode = ThemeMode.system;
     if (modeIndex == 1) mode = ThemeMode.light;
