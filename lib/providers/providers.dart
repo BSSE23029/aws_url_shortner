@@ -6,10 +6,20 @@ import '../models/models.dart';
 import '../config.dart';
 import 'package:flutter/foundation.dart';
 
+// Helper for formatted console logs
 void _log(String message) {
   if (kDebugMode) {
     print("🟣 [PROVIDER] $message");
   }
+}
+
+// Model for Geo-Map Visualization
+class MapDataModel {
+  MapDataModel(this.countryCode, this.count, this.latitude, this.longitude);
+  final String countryCode;
+  final int count;
+  final double latitude;
+  final double longitude;
 }
 
 // ===========================================================================
@@ -24,7 +34,7 @@ class AuthState {
   final bool requiresMfa;
   final bool confirmationRequired;
   final String? tempEmail;
-  final bool isInitialized; // Track if local storage check is complete
+  final bool isInitialized;
 
   AuthState({
     this.user,
@@ -38,12 +48,12 @@ class AuthState {
   });
 
   bool get isAuthenticated {
-    final result =
+    final auth =
         user != null && token != null && !requiresMfa && !confirmationRequired;
     _log(
-      "🔍 isAuthenticated check: $result (user: ${user != null}, token: ${token != null}, mfa: $requiresMfa, confirmation: $confirmationRequired)",
+      "🔍 isAuthenticated check: $auth (user: ${user != null}, token: ${token != null}, mfa: $requiresMfa, confirmation: $confirmationRequired)",
     );
-    return result;
+    return auth;
   }
 
   AuthState copyWith({
@@ -74,21 +84,21 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final ApiClient _apiClient;
-  String? _cachedPassword; // Used to auto-login after email confirmation
+  String? _cachedPassword;
 
   AuthNotifier(this._apiClient) : super(AuthState()) {
     _log("🔧 AuthNotifier initialized");
     tryAutoLogin();
   }
 
-  /// Check SharedPreferences for existing session on app boot
   Future<void> tryAutoLogin() async {
     _log("💾 tryAutoLogin: Checking storage...");
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     final userData = prefs.getString('user_model');
+
     _log(
-      "💾 tryAutoLogin: Token found=${token != null}, UserData found=${userData != null}",
+      "🟣 tryAutoLogin: Token found: ${token != null}, UserData found: ${userData != null}",
     );
 
     if (token != null && userData != null) {
@@ -98,15 +108,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
         _log(
           "💾 tryAutoLogin: User parsed - ID: ${user.id}, Email: ${user.email}, Name: ${user.name}",
         );
+
         _apiClient.setAuthToken(token);
         _log("✅ tryAutoLogin: Session restored for ${user.email}");
         state = state.copyWith(user: user, token: token, isInitialized: true);
       } catch (e) {
-        _log("⚠️ tryAutoLogin: Failed to parse stored user data - Error: $e");
+        _log("❌ tryAutoLogin: Error parsing stored data: $e");
         state = state.copyWith(isInitialized: true);
       }
     } else {
-      _log("ℹ️ tryAutoLogin: No stored session found");
+      _log("🟣 tryAutoLogin: No stored credentials found");
       state = state.copyWith(isInitialized: true);
     }
     _log(
@@ -119,46 +130,37 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String password, {
     bool rememberMe = false,
   }) async {
-    _log("🔑 signIn: Attempting login for $email (rememberMe: $rememberMe)");
+    _log(
+      "🔑 signIn: Starting sign-in for email: $email, rememberMe: $rememberMe",
+    );
     state = state.copyWith(isLoading: true, errorMessage: null);
-    _cachedPassword = password; // Cache for post-verification auto-login
+    _cachedPassword = password;
     _log("🔑 signIn: Password cached for potential post-verification login");
 
-    _log("🔑 signIn: Calling API signIn...");
     final response = await _apiClient.signIn(email, password);
     _log(
-      "🔑 signIn: API response - success: ${response.success}, message: ${response.message}",
+      "🟣 signIn: API response - success: ${response.success}, message: ${response.message}",
     );
 
     if (response.success && response.data != null) {
       final data = response.data!;
-      _log("🔑 signIn: Parsing user data...");
-      final user = UserModel.fromJson(data['user']);
-      final token = data['token'];
-      _log(
-        "🔑 signIn: User parsed - ID: ${user.id}, Email: ${user.email}, Name: ${user.name}",
-      );
+      _log("🔑 signIn: Processing user data for ${data['user']?['email']}");
 
       if (rememberMe) {
-        _log("💾 signIn: Saving session to SharedPreferences");
+        _log("💾 signIn: Persisting credentials to SharedPreferences");
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
+        await prefs.setString('auth_token', data['token']);
         await prefs.setString('user_model', jsonEncode(data['user']));
-        _log("💾 signIn: Session saved successfully");
-      } else {
-        _log("💾 signIn: rememberMe=false, skipping storage");
       }
 
       state = state.copyWith(
-        user: user,
-        token: token,
+        user: UserModel.fromJson(data['user']),
+        token: data['token'],
         isLoading: false,
-        requiresMfa: false,
-        confirmationRequired: false,
       );
-      _log("✅ signIn: Success - User authenticated");
+      _log("✅ signIn: Login complete");
     } else {
-      _log("❌ signIn: Failed - ${response.message}");
+      _log("❌ signIn: Sign-in failed - ${response.message}");
       state = state.copyWith(
         isLoading: false,
         errorMessage: response.message ?? 'Sign in failed',
@@ -166,154 +168,114 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  void signOut() async {
+    _log("🚪 signOut: Starting sign-out process");
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_model');
+    _log("🚪 signOut: Storage cleared");
+
+    _cachedPassword = null;
+    _apiClient.clearAuthToken();
+    state = AuthState(isInitialized: true);
+    _log("✅ signOut: Auth state reset complete");
+  }
+
   Future<void> signUp({
     required String email,
     required String password,
     required String name,
   }) async {
-    _log("📝 signUp: Registering $email with name: $name");
+    _log("📝 signUp: Registering new user: $email (Name: $name)");
     state = state.copyWith(
       isLoading: true,
       errorMessage: null,
       tempEmail: email,
     );
     _cachedPassword = password;
-    _log("📝 signUp: Password cached, tempEmail set to: $email");
 
-    _log("📝 signUp: Calling API signUp...");
     final response = await _apiClient.signUp(
       email: email,
       password: password,
       name: name,
     );
-    _log(
-      "📝 signUp: API response - success: ${response.success}, message: ${response.message}",
-    );
+    _log("🟣 signUp: API response - success: ${response.success}");
 
     if (response.success) {
       final confRequired = response.data?['confirmationRequired'] ?? false;
-      _log("✅ signUp: Success (Confirmation required: $confRequired)");
+      _log(
+        "✅ signUp: Registration success. Confirmation required: $confRequired",
+      );
       state = state.copyWith(
         isLoading: false,
         confirmationRequired: confRequired,
       );
     } else {
-      _log("❌ signUp: Failed - ${response.message}");
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: response.message ?? 'Sign up failed',
-      );
+      _log("❌ signUp: Registration failed - ${response.message}");
+      state = state.copyWith(isLoading: false, errorMessage: response.message);
     }
   }
 
   Future<void> confirmAccount(String code) async {
-    _log("✉️ confirmAccount: Starting with code: $code");
+    _log(
+      "✉️ confirmAccount: Attempting code verification for ${state.tempEmail}",
+    );
     if (state.tempEmail == null) {
-      _log("❌ confirmAccount: tempEmail is null, session expired");
-      state = state.copyWith(errorMessage: "Session expired. Please sign in.");
+      _log("⚠️ confirmAccount: No tempEmail found in state");
       return;
     }
-
-    _log("✉️ confirmAccount: Verifying email: ${state.tempEmail}");
     state = state.copyWith(isLoading: true);
-    _log("✉️ confirmAccount: Calling API confirmAccount...");
     final response = await _apiClient.confirmAccount(state.tempEmail!, code);
-    _log(
-      "✉️ confirmAccount: API response - success: ${response.success}, message: ${response.message}",
-    );
 
     if (response.success) {
-      _log("✅ confirmAccount: Success");
+      _log("✅ confirmAccount: Verification successful");
       if (_cachedPassword != null) {
-        _log(
-          "🚀 confirmAccount: Cached password found, triggering automatic login for ${state.tempEmail}",
-        );
+        _log("🚀 confirmAccount: Cached password found, triggering auto-login");
         await signIn(state.tempEmail!, _cachedPassword!, rememberMe: true);
-        _log("🚀 confirmAccount: Automatic login completed");
       } else {
-        _log("ℹ️ confirmAccount: No cached password, user must login manually");
+        _log(
+          "🟣 confirmAccount: No cached password, user must log in manually",
+        );
         state = state.copyWith(isLoading: false, confirmationRequired: false);
       }
     } else {
-      _log("❌ confirmAccount: Failed - ${response.message}");
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: response.message ?? 'Verification failed',
-      );
+      _log("❌ confirmAccount: Verification failed - ${response.message}");
+      state = state.copyWith(isLoading: false, errorMessage: response.message);
     }
-  }
-
-  void signOut() async {
-    _log("🚪 signOut: Starting sign-out process");
-    _log("🚪 signOut: Current user: ${state.user?.email ?? 'none'}");
-    final prefs = await SharedPreferences.getInstance();
-    _log("🚪 signOut: Removing auth_token from storage");
-    await prefs.remove('auth_token');
-    _log("🚪 signOut: Removing user_model from storage");
-    await prefs.remove('user_model');
-
-    _log("🚪 signOut: Clearing cached password");
-    _cachedPassword = null;
-    _log("🚪 signOut: Clearing API client auth token");
-    _apiClient.clearAuthToken();
-    _log("🚪 signOut: Resetting AuthState");
-    state = AuthState(isInitialized: true);
-    _log("✅ signOut: Complete - User logged out");
   }
 
   Future<void> resendCode() async {
-    _log("📨 resendCode: Starting resend process");
-    if (state.tempEmail != null) {
-      _log("📨 resendCode: Requesting new code for ${state.tempEmail}");
+    _log("📨 resendCode: Requesting new code for ${state.tempEmail}");
+    if (state.tempEmail != null)
       await _apiClient.resendConfirmationCode(state.tempEmail!);
-      _log("✅ resendCode: Request sent successfully");
-    } else {
-      _log("❌ resendCode: tempEmail is null, cannot resend");
-    }
   }
 
   Future<void> verifyMfa(String code) async {
-    _log("🔐 verifyMfa: Starting verification with code: $code");
+    _log("🔐 verifyMfa: Starting MFA code verification");
     state = state.copyWith(isLoading: true);
-    _log("🔐 verifyMfa: Calling API verifyMfa...");
     final response = await _apiClient.verifyMfa(code);
-    _log(
-      "🔐 verifyMfa: API response - success: ${response.success}, message: ${response.message}",
-    );
+    _log("🟣 verifyMfa: API response success: ${response.success}");
 
     if (response.success && response.data != null) {
-      _log("🔐 verifyMfa: Parsing user data...");
-      final user = UserModel.fromJson(response.data!['user']);
-      _log("✅ verifyMfa: Success - User: ${user.email}");
+      _log("✅ verifyMfa: MFA Accepted");
       state = state.copyWith(
-        user: user,
+        user: UserModel.fromJson(response.data!['user']),
         token: response.data!['token'],
         isLoading: false,
         requiresMfa: false,
       );
     } else {
-      _log("❌ verifyMfa: Failed - ${response.message}");
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: response.message ?? "MFA verification failed",
-      );
+      _log("❌ verifyMfa: MFA Rejected - ${response.message}");
+      state = state.copyWith(isLoading: false, errorMessage: response.message);
     }
   }
 
   Future<bool> forgotPassword(String email) async {
     _log("🔑 forgotPassword: Reset requested for $email");
     state = state.copyWith(isLoading: true);
-    _log("🔑 forgotPassword: Calling API forgotPassword...");
     final response = await _apiClient.forgotPassword(email);
-    _log(
-      "🔑 forgotPassword: API response - success: ${response.success}, message: ${response.message}",
-    );
     state = state.copyWith(isLoading: false);
-    if (response.success) {
-      _log("✅ forgotPassword: Reset email sent successfully");
-    } else {
-      _log("❌ forgotPassword: Failed - ${response.message}");
-    }
+    _log("🟣 forgotPassword: Success: ${response.success}");
     return response.success;
   }
 }
@@ -327,7 +289,6 @@ class UrlsState {
   final GlobalStatsModel globalStats;
   final bool isLoading;
   final String? errorMessage;
-
   UrlsState({
     this.urls = const [],
     GlobalStatsModel? globalStats,
@@ -336,9 +297,39 @@ class UrlsState {
   }) : globalStats = globalStats ?? GlobalStatsModel.empty();
 
   int get myTotalClicks {
-    final total = urls.fold(0, (sum, item) => sum + item.clickCount);
-    _log("🔍 myTotalClicks calculated: $total from ${urls.length} URLs");
-    return total;
+    final count = urls.fold(0, (sum, item) => sum + item.clickCount);
+    _log("🔍 myTotalClicks calculated: $count from ${urls.length} URLs");
+    return count;
+  }
+
+  double get systemSaturation =>
+      (globalStats.totalSystemLinks / 100).clamp(0.0, 1.0);
+  double get efficiencyScore =>
+      urls.isEmpty ? 0 : (myTotalClicks / urls.length) / 10;
+
+  List<MapDataModel> get mapIntelligence {
+    _log("🗺️ mapIntelligence: Mapping geoDistribution to coordinates...");
+    final Map<String, List<double>> coords = {
+      'PK': [30.3753, 69.3451],
+      'US': [37.0902, -95.7129],
+      'DE': [51.1657, 10.4515],
+      'UK': [55.3781, -3.4360],
+      'CN': [35.8617, 104.1954],
+      'IN': [20.5937, 78.9629],
+    };
+    final data = globalStats.geoDistribution.entries.map((e) {
+      final c = coords[e.key] ?? [0.0, 0.0];
+      return MapDataModel(e.key, e.value, c[0], c[1]);
+    }).toList();
+    _log("🗺️ mapIntelligence: Created ${data.length} map data points");
+    return data;
+  }
+
+  List<MapEntry<int, int>> get hourlyActivity {
+    return List.generate(
+      24,
+      (i) => MapEntry(i, (i * 150 % 1000) + (i > 18 ? 2000 : 500)),
+    );
   }
 
   UrlsState copyWith({
@@ -361,7 +352,6 @@ class UrlsState {
 
 class UrlsNotifier extends StateNotifier<UrlsState> {
   final ApiClient _apiClient;
-
   UrlsNotifier(this._apiClient) : super(UrlsState()) {
     _log("🔧 UrlsNotifier initialized");
   }
@@ -372,19 +362,21 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
       _log("📊 loadDashboard: Already loading, skipping");
       return;
     }
-
     _log("📊 loadDashboard: Syncing data...");
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(isLoading: true);
 
     _log("📊 loadDashboard: Calling API getDashboardSync...");
     final response = await _apiClient.getDashboardSync();
     _log(
-      "📊 loadDashboard: API response - success: ${response.success}, message: ${response.message}",
+      "🟣 loadDashboard: API response - success: ${response.success}, message: ${response.message}",
     );
 
     if (response.success && response.data != null) {
       try {
         final data = response.data!;
+        _log(
+          "🟣 [loadDashboard API Response]: ${jsonEncode(data).substring(0, 100)}...",
+        );
         _log("📊 loadDashboard: Response keys: ${data.keys.join(', ')}");
 
         _log("📊 loadDashboard: Parsing URLs list...");
@@ -405,19 +397,17 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
           isLoading: false,
         );
         _log("✅ loadDashboard: Success. Dashboard loaded and state updated");
-      } catch (e) {
-        _log("❌ loadDashboard: Parsing error - $e");
+      } catch (e, stack) {
+        _log("❌ loadDashboard: CRITICAL PARSE ERROR: $e");
+        debugPrint(stack.toString());
         state = state.copyWith(
           isLoading: false,
-          errorMessage: "Failed to process server data.",
+          errorMessage: "Data synchronization error",
         );
       }
     } else {
-      _log("❌ loadDashboard: API error - ${response.message}");
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: response.message ?? "Failed to fetch dashboard",
-      );
+      _log("❌ loadDashboard: Sync failed - ${response.message}");
+      state = state.copyWith(isLoading: false, errorMessage: response.message);
     }
   }
 
@@ -425,80 +415,41 @@ class UrlsNotifier extends StateNotifier<UrlsState> {
     required String originalUrl,
     String? customCode,
   }) async {
-    _log("🔗 createUrl: Starting URL creation");
-    _log(
-      "🔗 createUrl: originalUrl=$originalUrl, customCode=${customCode ?? 'auto-generated'}",
-    );
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    _log("🔗 createUrl: Calling API createUrl...");
+    _log("🔗 createUrl: Starting deployment for $originalUrl");
+    state = state.copyWith(isLoading: true);
     final response = await _apiClient.createUrl(
       originalUrl: originalUrl,
       customCode: customCode,
     );
-    _log(
-      "🔗 createUrl: API response - success: ${response.success}, message: ${response.message}",
-    );
+    _log("🟣 createUrl: API response success: ${response.success}");
 
     if (response.success && response.data != null) {
-      try {
-        _log("🔗 createUrl: Parsing URL data from response...");
-        final urlData = response.data!['url'] ?? response.data!;
-        final newUrl = UrlModel.fromJson(urlData);
-        _log(
-          "🔗 createUrl: New URL created - ID: ${newUrl.id}, shortCode: ${newUrl.shortCode}",
-        );
-        final previousCount = state.urls.length;
-        state = state.copyWith(urls: [newUrl, ...state.urls], isLoading: false);
-        _log(
-          "✅ createUrl: Success - URLs count: $previousCount → ${state.urls.length}",
-        );
-      } catch (e) {
-        _log("❌ createUrl: Parsing failed - $e");
-        state = state.copyWith(isLoading: false);
-      }
+      _log("🔗 createUrl: Parsing new URL data...");
+      final newUrl = UrlModel.fromJson(response.data!['url'] ?? response.data!);
+      _log("🔗 createUrl: New shortCode - ${newUrl.shortCode}");
+      state = state.copyWith(urls: [newUrl, ...state.urls], isLoading: false);
+      _log("✅ createUrl: Success. Asset deployed and state updated");
     } else {
-      _log("❌ createUrl: Failed - ${response.message}");
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: response.message ?? "Could not create URL",
-      );
+      _log("❌ createUrl: Deployment failed - ${response.message}");
+      state = state.copyWith(isLoading: false, errorMessage: response.message);
     }
   }
 
   Future<void> deleteUrl(String id) async {
-    _log("🗑️ deleteUrl: Starting deletion for ID: $id");
-    final previousUrls = state.urls;
-    final previousCount = previousUrls.length;
-    final urlToDelete = previousUrls.where((u) => u.id == id).firstOrNull;
-    if (urlToDelete != null) {
-      _log(
-        "🗑️ deleteUrl: URL to delete - shortCode: ${urlToDelete.shortCode}, originalUrl: ${urlToDelete.originalUrl}",
-      );
-    }
+    _log("🗑️ deleteUrl: Preparing to decommission asset ID: $id");
+    final prev = state.urls;
 
-    // Optimistic Update
-    _log("🗑️ deleteUrl: Performing optimistic update...");
+    _log("🗑️ deleteUrl: Performing optimistic state update");
     state = state.copyWith(urls: state.urls.where((u) => u.id != id).toList());
-    _log("🗑️ deleteUrl: URLs count: $previousCount → ${state.urls.length}");
 
-    _log("🗑️ deleteUrl: Calling API deleteUrl...");
     final response = await _apiClient.deleteUrl(id);
-    _log(
-      "🗑️ deleteUrl: API response - success: ${response.success}, message: ${response.message}",
-    );
+    _log("🟣 deleteUrl: API response success: ${response.success}");
 
     if (!response.success) {
-      _log("❌ deleteUrl: Failed - ${response.message}, rolling back");
-      state = state.copyWith(
-        urls: previousUrls,
-        errorMessage: response.message,
-      );
-      _log(
-        "🗑️ deleteUrl: Rollback complete - URLs count restored to $previousCount",
-      );
+      _log("❌ deleteUrl: Remote deletion failed. Rolling back state.");
+      state = state.copyWith(urls: prev, errorMessage: response.message);
     } else {
-      _log("✅ deleteUrl: Success - URL deleted permanently");
+      _log("✅ deleteUrl: Asset decommissioned successfully");
     }
   }
 }
@@ -517,13 +468,11 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref.watch(apiClientProvider));
 });
 
-/// UI performance optimization: Read-only selector for the auth state
 final authStateProvider = Provider<AuthState>((ref) {
-  final state = ref.watch(authProvider);
   _log(
-    "🏗️ authStateProvider: Providing AuthState - isAuthenticated: ${state.isAuthenticated}",
+    "🏗️ authStateProvider: Providing AuthState - isAuthenticated: ${ref.watch(authProvider).isAuthenticated}",
   );
-  return state;
+  return ref.watch(authProvider);
 });
 
 final urlsProvider = StateNotifierProvider<UrlsNotifier, UrlsState>((ref) {
@@ -532,8 +481,6 @@ final urlsProvider = StateNotifierProvider<UrlsNotifier, UrlsState>((ref) {
 });
 
 final regionProvider = StateProvider<String>((ref) {
-  _log(
-    "🏗️ regionProvider: Initializing with default region: ${AppConfig.defaultRegion}",
-  );
+  _log("🏗️ regionProvider: Defaulting to ${AppConfig.defaultRegion}");
   return AppConfig.defaultRegion;
 });

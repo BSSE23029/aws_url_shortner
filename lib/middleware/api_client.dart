@@ -11,6 +11,18 @@ void _log(String message) {
   }
 }
 
+void _logJson(String label, dynamic data) {
+  if (kDebugMode) {
+    try {
+      const encoder = JsonEncoder.withIndent('  ');
+      final prettyJson = encoder.convert(data);
+      print('🔵 API CLIENT [$label]:\n$prettyJson');
+    } catch (e) {
+      print('🔵 API CLIENT [$label]: $data');
+    }
+  }
+}
+
 class ApiClient {
   String? _authToken;
   late final CognitoUserPool _userPool;
@@ -84,7 +96,7 @@ class ApiClient {
       final userId = _session!.getIdToken().payload['sub'];
       _log('signIn: Sign-in successful for user ID: $userId');
 
-      return ApiResponse.success({
+      final responseData = {
         'token': idToken,
         'user': {
           'id': userId,
@@ -93,9 +105,12 @@ class ApiClient {
           'createdAt': DateTime.now().toIso8601String(),
           'mfaEnabled': false,
         },
-      });
+      };
+      _logJson('signIn Response', responseData);
+      return ApiResponse.success(responseData);
     } on CognitoClientException catch (e) {
       _log('signIn: CognitoClientException - ${e.message}');
+      _logJson('signIn Error', {'error': e.message});
       return ApiResponse.error(message: e.message ?? "Authentication failed");
     } catch (e) {
       _log('signIn: Unknown error - $e');
@@ -127,15 +142,19 @@ class ApiClient {
       _log(
         'signUp: Sign-up successful, confirmationRequired: $confirmationRequired',
       );
-      return ApiResponse.success({
+      final responseData = {
         'user': {'email': email, 'name': name},
         'confirmationRequired': confirmationRequired,
-      });
+      };
+      _logJson('signUp Response', responseData);
+      return ApiResponse.success(responseData);
     } on CognitoClientException catch (e) {
       _log('signUp: CognitoClientException - ${e.message}');
+      _logJson('signUp Error', {'error': e.message});
       return ApiResponse.error(message: e.message ?? "Sign up failed");
     } catch (e) {
       _log('signUp: Unknown error - $e');
+      _logJson('signUp Error', {'error': e.toString()});
       return ApiResponse.error(message: 'Error: $e');
     }
   }
@@ -147,9 +166,11 @@ class ApiClient {
       _log('confirmAccount: Confirming registration with code');
       final success = await _cognitoUser!.confirmRegistration(code);
       _log('confirmAccount: Confirmation result: $success');
+      _logJson('confirmAccount Response', {'success': success, 'email': email});
       return ApiResponse.success(success);
     } catch (e) {
       _log('confirmAccount: Verification failed - $e');
+      _logJson('confirmAccount Error', {'error': e.toString()});
       return ApiResponse.error(message: 'Verification failed');
     }
   }
@@ -184,15 +205,19 @@ class ApiClient {
         _log(
           'verifyMfa: MFA verification successful for user: ${_cognitoUser!.username}',
         );
-        return ApiResponse.success({
+        final responseData = {
           'token': idToken,
           'user': {'email': _cognitoUser!.username},
-        });
+        };
+        _logJson('verifyMfa Response', responseData);
+        return ApiResponse.success(responseData);
       }
       _log('verifyMfa: Invalid MFA code or session');
+      _logJson('verifyMfa Error', {'error': 'Invalid MFA Code'});
       return ApiResponse.error(message: 'Invalid MFA Code');
     } catch (e) {
       _log('verifyMfa: MFA error - $e');
+      _logJson('verifyMfa Error', {'error': e.toString()});
       return ApiResponse.error(message: 'MFA Error');
     }
   }
@@ -204,9 +229,11 @@ class ApiClient {
       _log('forgotPassword: Calling forgotPassword');
       await user.forgotPassword();
       _log('forgotPassword: Password reset initiated successfully');
+      _logJson('forgotPassword Response', {'success': true, 'email': email});
       return ApiResponse.success({});
     } catch (e) {
       _log('forgotPassword: Reset error - $e');
+      _logJson('forgotPassword Error', {'error': e.toString()});
       return ApiResponse.error(message: 'Reset error');
     }
   }
@@ -251,6 +278,7 @@ class ApiClient {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = jsonDecode(response.body);
         _log('request: Response body parsed successfully');
+        _logJson('API Response [$method $endpoint]', data);
         if (data is Map && data.containsKey('data')) {
           _log('request: Returning data envelope');
           return ApiResponse.success(data['data'] as T?);
@@ -259,12 +287,20 @@ class ApiClient {
         return ApiResponse.success(data as T?);
       }
       _log('request: Server error - status ${response.statusCode}');
+      _logJson('API Error Response [$method $endpoint]', {
+        'statusCode': response.statusCode,
+        'body': response.body,
+      });
       return ApiResponse.error(
         message: 'Server error',
         statusCode: response.statusCode,
       );
     } catch (e) {
       _log('request: Connection failed - $e');
+      _logJson('API Connection Error', {
+        'error': e.toString(),
+        'endpoint': endpoint,
+      });
       return ApiResponse.error(message: 'Connection failed');
     }
   }

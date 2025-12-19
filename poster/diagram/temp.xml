@@ -1,0 +1,46 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <mxCell
+      id="2"
+      parent="1"
+      vertex="1"
+      style="
+        rounded=1;
+        whiteSpace=wrap;
+        html=1;
+        align=left;
+        verticalAlign=top;
+        spacingLeft=10;
+        spacingTop=10;
+        spacingRight=10;
+        spacingBottom=10;
+        fillColor=#FFF2CC;
+        strokeColor=#D6B656;
+        fontSize=12;
+      "
+      value="
+        &lt;div style='font-size:13px; font-weight:600;'&gt;
+          Learner Lab Limitations
+        &lt;/div&gt;
+        &lt;br&gt;
+        &lt;div&gt;
+          • CloudFront&lt;br&gt;
+          • CloudWatch&lt;br&gt;
+          • AWS X-Ray
+        &lt;/div&gt;
+        &lt;br&gt;
+        &lt;div&gt;
+          Multi-region deployment unavailable
+        &lt;/div&gt;
+        &lt;div style='font-weight:600;'&gt;
+          Region supported: us-east-1 only
+        &lt;/div&gt;
+      ">
+      <mxGeometry x="1960" y="910" width="260" height="160" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

@@ -24,12 +24,6 @@ class _StealthRailState extends ConsumerState<StealthRail> {
     final width = MediaQuery.of(context).size.width;
     final themeMode = ref.watch(themeProvider).mode;
 
-    // Check if effectively dark for the icon toggle
-    final isDark =
-        themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system &&
-            MediaQuery.of(context).platformBrightness == Brightness.dark);
-
     // Auto-collapse logic
     final isCompact = width < 1100 || _isManuallyCollapsed;
     final railWidth = isCompact
@@ -41,7 +35,7 @@ class _StealthRailState extends ConsumerState<StealthRail> {
     final txtColor = theme.colorScheme.onSurface;
 
     final idx = widget.navigationShell.currentIndex;
-    // 0=Dash, 1=Stats, 2=Prefs, 3=Profile
+    // 0=Dash, 1=Links, 2=Stats, 3=Prefs, 4=Profile
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -114,11 +108,19 @@ class _StealthRailState extends ConsumerState<StealthRail> {
                 ),
                 const SizedBox(height: 8),
                 _RailItem(
-                  icon: PhosphorIconsRegular.chartLineUp,
-                  label: "Analytics",
+                  icon: PhosphorIconsRegular.link,
+                  label: "Active Links",
                   isSelected: idx == 1,
                   isCompact: isCompact,
                   onTap: () => _onTap(1),
+                ),
+                const SizedBox(height: 8),
+                _RailItem(
+                  icon: PhosphorIconsRegular.chartLineUp,
+                  label: "Analytics",
+                  isSelected: idx == 2,
+                  isCompact: isCompact,
+                  onTap: () => _onTap(2),
                 ),
 
                 const Spacer(),
@@ -148,9 +150,9 @@ class _StealthRailState extends ConsumerState<StealthRail> {
                 _RailItem(
                   icon: PhosphorIconsRegular.gear,
                   label: "Settings",
-                  isSelected: idx == 2, // Highlight if we are in Settings
+                  isSelected: idx == 3, // Highlight if we are in Settings
                   isCompact: isCompact,
-                  onTap: () => _onTap(2),
+                  onTap: () => _onTap(3),
                 ),
 
                 const SizedBox(height: 8),
@@ -159,9 +161,9 @@ class _StealthRailState extends ConsumerState<StealthRail> {
                 _RailItem(
                   icon: PhosphorIconsRegular.userCircle,
                   label: "Profile",
-                  isSelected: idx == 3, // Highlight if in Profile
+                  isSelected: idx == 4, // Highlight if in Profile
                   isCompact: isCompact,
-                  onTap: () => _onTap(3),
+                  onTap: () => _onTap(4),
                 ),
 
                 const SizedBox(height: 24),

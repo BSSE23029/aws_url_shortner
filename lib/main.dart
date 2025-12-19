@@ -14,6 +14,7 @@ import 'ui/screens/auth/mfa_screen.dart';
 import 'ui/screens/auth/forgot_password_screen.dart';
 import 'ui/screens/dashboard/dashboard_screen.dart';
 import 'ui/screens/dashboard/stats_screen.dart';
+import 'ui/screens/deployments/deployments_screen.dart';
 import 'ui/screens/url/create_url_screen.dart';
 import 'ui/screens/url/url_details_screen.dart';
 import 'ui/screens/settings/appearance_screen.dart';
@@ -70,6 +71,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                         label: 'Dash',
                       ),
                       BottomNavigationBarItem(
+                        icon: Icon(Icons.link_rounded),
+                        label: 'Links',
+                      ),
+                      BottomNavigationBarItem(
                         icon: Icon(Icons.analytics_rounded),
                         label: 'Stats',
                       ),
@@ -92,6 +97,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/dashboard',
                 builder: (context, state) => const DashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/deployments',
+                builder: (context, state) => const DeploymentsScreen(),
               ),
             ],
           ),
