@@ -61,9 +61,9 @@ dependencies:
   responsive_framework: ^1.5.1
   shared_preferences: ^2.2.2
 
-  syncfusion_flutter_charts: ^32.1.19
-  syncfusion_flutter_gauges: ^32.1.19
-  syncfusion_flutter_maps: ^32.1.19
+  syncfusion_flutter_charts: ^30.0.0
+  syncfusion_flutter_gauges: ^30.0.0
+  syncfusion_flutter_maps: ^30.0.0
 
 dev_dependencies:
   flutter_test:
