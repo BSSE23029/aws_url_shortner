@@ -126,7 +126,9 @@ class _UrlDetailsScreenState extends ConsumerState<UrlDetailsScreen>
                               padding: EdgeInsets.all(isMobile ? 12 : 16),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                                borderRadius: BorderRadius.circular(
+                                  isMobile ? 12 : 16,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color:
@@ -181,11 +183,14 @@ class _UrlDetailsScreenState extends ConsumerState<UrlDetailsScreen>
                                   Expanded(
                                     child: SelectableText(
                                       widget.url.shortUrl,
-                                      style: (isMobile ? theme.textTheme.bodyMedium : theme.textTheme.bodyLarge)
-                                          ?.copyWith(
-                                            color: txtColor,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                      style:
+                                          (isMobile
+                                                  ? theme.textTheme.bodyMedium
+                                                  : theme.textTheme.bodyLarge)
+                                              ?.copyWith(
+                                                color: txtColor,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                     ),
                                   ),
                                   IconButton(
@@ -236,10 +241,14 @@ class _UrlDetailsScreenState extends ConsumerState<UrlDetailsScreen>
                       children: [
                         Text(
                           'PERFORMANCE METRICS',
-                          style: (isMobile ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: isMobile ? 1.2 : 1.5,
-                          ),
+                          style:
+                              (isMobile
+                                      ? theme.textTheme.titleSmall
+                                      : theme.textTheme.titleMedium)
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: isMobile ? 1.2 : 1.5,
+                                  ),
                         ),
                         SizedBox(height: isMobile ? 16 : 24),
                         GridView.count(
@@ -304,10 +313,14 @@ class _UrlDetailsScreenState extends ConsumerState<UrlDetailsScreen>
                             const SizedBox(width: 8),
                             Text(
                               'ORIGINAL URL',
-                              style: (isMobile ? theme.textTheme.bodySmall : theme.textTheme.titleSmall)?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: isMobile ? 1.0 : 1.2,
-                              ),
+                              style:
+                                  (isMobile
+                                          ? theme.textTheme.bodySmall
+                                          : theme.textTheme.titleSmall)
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: isMobile ? 1.0 : 1.2,
+                                      ),
                             ),
                           ],
                         ),
@@ -322,9 +335,11 @@ class _UrlDetailsScreenState extends ConsumerState<UrlDetailsScreen>
                           ),
                           child: SelectableText(
                             widget.url.originalUrl,
-                            style: (isMobile ? theme.textTheme.bodySmall : theme.textTheme.bodyMedium)?.copyWith(
-                              color: txtColor.withAlpha(200),
-                            ),
+                            style:
+                                (isMobile
+                                        ? theme.textTheme.bodySmall
+                                        : theme.textTheme.bodyMedium)
+                                    ?.copyWith(color: txtColor.withAlpha(200)),
                           ),
                         ),
                       ],
@@ -335,155 +350,163 @@ class _UrlDetailsScreenState extends ConsumerState<UrlDetailsScreen>
                 SizedBox(height: isMobile ? 16 : 24),
 
                 // Action Buttons
-                isMobile ? Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: PhysicsButton(
-                        onPressed: () async {
-                          await Clipboard.setData(
-                            ClipboardData(text: widget.url.shortUrl),
-                          );
-                          if (ref.read(themeProvider).enableHaptics) {
-                            HapticFeedback.lightImpact();
-                          }
-                          if (context.mounted) {
-                            CyberFeedback.show(
-                              context,
-                              title: 'Copied!',
-                              message: 'Short URL copied to clipboard',
-                              type: CyberMessageType.success,
-                            );
-                          }
-                        },
-                        backgroundColor: theme.colorScheme.primary,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              PhosphorIconsBold.copy,
-                              color: theme.colorScheme.onPrimary,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'COPY',
-                              style: TextStyle(
-                                color: theme.colorScheme.onPrimary,
-                                fontWeight: FontWeight.bold,
+                isMobile
+                    ? Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: PhysicsButton(
+                              onPressed: () async {
+                                await Clipboard.setData(
+                                  ClipboardData(text: widget.url.shortUrl),
+                                );
+                                if (ref.read(themeProvider).enableHaptics) {
+                                  HapticFeedback.lightImpact();
+                                }
+                                if (context.mounted) {
+                                  CyberFeedback.show(
+                                    context,
+                                    title: 'Copied!',
+                                    message: 'Short URL copied to clipboard',
+                                    type: CyberMessageType.success,
+                                  );
+                                }
+                              },
+                              backgroundColor: theme.colorScheme.primary,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    PhosphorIconsBold.copy,
+                                    color: theme.colorScheme.onPrimary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'COPY',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onPrimary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: PhysicsButton(
-                        onPressed: () {
-                          if (ref.read(themeProvider).enableHaptics) {
-                            HapticFeedback.lightImpact();
-                          }
-                          CyberFeedback.show(
-                            context,
-                            title: 'Coming Soon',
-                            message:
-                                'Share functionality will be available soon',
-                            type: CyberMessageType.info,
-                          );
-                        },
-                        backgroundColor: Colors.white.withAlpha(20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(PhosphorIconsBold.share, color: txtColor),
-                            const SizedBox(width: 8),
-                            Text(
-                              'SHARE',
-                              style: TextStyle(
-                                color: txtColor,
-                                fontWeight: FontWeight.bold,
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: PhysicsButton(
+                              onPressed: () {
+                                if (ref.read(themeProvider).enableHaptics) {
+                                  HapticFeedback.lightImpact();
+                                }
+                                CyberFeedback.show(
+                                  context,
+                                  title: 'Coming Soon',
+                                  message:
+                                      'Share functionality will be available soon',
+                                  type: CyberMessageType.info,
+                                );
+                              },
+                              backgroundColor: Colors.white.withAlpha(20),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    PhosphorIconsBold.share,
+                                    color: txtColor,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'SHARE',
+                                    style: TextStyle(
+                                      color: txtColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ) : Row(
-                  children: [
-                    Expanded(
-                      child: PhysicsButton(
-                        onPressed: () async {
-                          await Clipboard.setData(
-                            ClipboardData(text: widget.url.shortUrl),
-                          );
-                          if (ref.read(themeProvider).enableHaptics) {
-                            HapticFeedback.lightImpact();
-                          }
-                          if (context.mounted) {
-                            CyberFeedback.show(
-                              context,
-                              title: 'Copied!',
-                              message: 'Short URL copied to clipboard',
-                              type: CyberMessageType.success,
-                            );
-                          }
-                        },
-                        backgroundColor: theme.colorScheme.primary,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              PhosphorIconsBold.copy,
-                              color: theme.colorScheme.onPrimary,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'COPY',
-                              style: TextStyle(
-                                color: theme.colorScheme.onPrimary,
-                                fontWeight: FontWeight.bold,
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: PhysicsButton(
+                              onPressed: () async {
+                                await Clipboard.setData(
+                                  ClipboardData(text: widget.url.shortUrl),
+                                );
+                                if (ref.read(themeProvider).enableHaptics) {
+                                  HapticFeedback.lightImpact();
+                                }
+                                if (context.mounted) {
+                                  CyberFeedback.show(
+                                    context,
+                                    title: 'Copied!',
+                                    message: 'Short URL copied to clipboard',
+                                    type: CyberMessageType.success,
+                                  );
+                                }
+                              },
+                              backgroundColor: theme.colorScheme.primary,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    PhosphorIconsBold.copy,
+                                    color: theme.colorScheme.onPrimary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'COPY',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onPrimary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: PhysicsButton(
-                        onPressed: () {
-                          if (ref.read(themeProvider).enableHaptics) {
-                            HapticFeedback.lightImpact();
-                          }
-                          CyberFeedback.show(
-                            context,
-                            title: 'Coming Soon',
-                            message:
-                                'Share functionality will be available soon',
-                            type: CyberMessageType.info,
-                          );
-                        },
-                        backgroundColor: Colors.white.withAlpha(20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(PhosphorIconsBold.share, color: txtColor),
-                            const SizedBox(width: 8),
-                            Text(
-                              'SHARE',
-                              style: TextStyle(
-                                color: txtColor,
-                                fontWeight: FontWeight.bold,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: PhysicsButton(
+                              onPressed: () {
+                                if (ref.read(themeProvider).enableHaptics) {
+                                  HapticFeedback.lightImpact();
+                                }
+                                CyberFeedback.show(
+                                  context,
+                                  title: 'Coming Soon',
+                                  message:
+                                      'Share functionality will be available soon',
+                                  type: CyberMessageType.info,
+                                );
+                              },
+                              backgroundColor: Colors.white.withAlpha(20),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    PhosphorIconsBold.share,
+                                    color: txtColor,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'SHARE',
+                                    style: TextStyle(
+                                      color: txtColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
 
                 SizedBox(height: isMobile ? 60 : 100),
               ],
@@ -514,10 +537,14 @@ class _UrlDetailsScreenState extends ConsumerState<UrlDetailsScreen>
                           SizedBox(height: isMobile ? 12 : 16),
                           Text(
                             'DELETE URL?',
-                            style: (isMobile ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.error,
-                            ),
+                            style:
+                                (isMobile
+                                        ? theme.textTheme.titleMedium
+                                        : theme.textTheme.titleLarge)
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.error,
+                                    ),
                           ),
                           SizedBox(height: isMobile ? 6 : 8),
                           Text(
@@ -555,17 +582,56 @@ class _UrlDetailsScreenState extends ConsumerState<UrlDetailsScreen>
                                     if (ref.read(themeProvider).enableHaptics) {
                                       HapticFeedback.heavyImpact();
                                     }
+
+                                    // Store initial state to check if deletion succeeded
+                                    final urlsBeforeDeletion = ref
+                                        .read(urlsProvider)
+                                        .urls
+                                        .length;
+
                                     await ref
                                         .read(urlsProvider.notifier)
                                         .deleteUrl(widget.url.id);
+
                                     if (context.mounted) {
-                                      context.pop();
-                                      CyberFeedback.show(
-                                        context,
-                                        title: 'Deleted',
-                                        message: 'URL has been deleted',
-                                        type: CyberMessageType.success,
-                                      );
+                                      // Check if deletion was successful by checking if URL count decreased
+                                      final urlsAfterDeletion = ref
+                                          .read(urlsProvider)
+                                          .urls
+                                          .length;
+                                      final errorMessage = ref
+                                          .read(urlsProvider)
+                                          .errorMessage;
+
+                                      if (errorMessage != null &&
+                                          errorMessage.isNotEmpty) {
+                                        // Deletion failed - stay on page and show error
+                                        setState(
+                                          () => _showDeleteConfirm = false,
+                                        );
+                                        CyberFeedback.show(
+                                          context,
+                                          title: 'Delete Failed',
+                                          message:
+                                              errorMessage.contains(
+                                                    'Unauthorized',
+                                                  ) ||
+                                                  errorMessage.contains('401')
+                                              ? 'You do not have permission to delete this URL'
+                                              : 'Failed to delete: $errorMessage',
+                                          type: CyberMessageType.error,
+                                        );
+                                      } else if (urlsAfterDeletion <
+                                          urlsBeforeDeletion) {
+                                        // Deletion succeeded
+                                        context.pop();
+                                        CyberFeedback.show(
+                                          context,
+                                          title: 'Deleted',
+                                          message: 'URL has been deleted',
+                                          type: CyberMessageType.success,
+                                        );
+                                      }
                                     }
                                   },
                                   backgroundColor: theme.colorScheme.error,
@@ -625,10 +691,11 @@ class _UrlDetailsScreenState extends ConsumerState<UrlDetailsScreen>
                 SizedBox(height: isMobile ? 6 : 8),
                 Text(
                   value,
-                  style: (isMobile ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                  style:
+                      (isMobile
+                              ? theme.textTheme.titleMedium
+                              : theme.textTheme.titleLarge)
+                          ?.copyWith(fontWeight: FontWeight.bold, color: color),
                 ),
                 SizedBox(height: isMobile ? 3 : 4),
                 Text(

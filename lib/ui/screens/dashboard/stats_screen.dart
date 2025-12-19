@@ -64,9 +64,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       debugPrint(
         "🗺️ GeoDistribution data: ${urlsState.globalStats.geoDistribution}",
       );
-      debugPrint(
-        "🗺️ Total features to process: ${features.length}",
-      );
+      debugPrint("🗺️ Total features to process: ${features.length}");
       debugPrint(
         "🗺️ GeoDistribution keys: ${urlsState.globalStats.geoDistribution.keys.toList()}",
       );
@@ -437,14 +435,23 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 else
                   Row(
                     children: [
-                      Expanded(flex: 2, child: _buildGlobalMap(urlsState, color, isMobile)),
+                      Expanded(
+                        flex: 2,
+                        child: _buildGlobalMap(urlsState, color, isMobile),
+                      ),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildGeoBreakdown(globalStats, color, isMobile)),
+                      Expanded(
+                        child: _buildGeoBreakdown(globalStats, color, isMobile),
+                      ),
                     ],
                   ),
 
                 SizedBox(height: isMobile ? 24 : 32),
-                _section("PLATFORM_ANALYTICS", "OPERATING SYSTEM DISTRIBUTION", isMobile),
+                _section(
+                  "PLATFORM_ANALYTICS",
+                  "OPERATING SYSTEM DISTRIBUTION",
+                  isMobile,
+                ),
                 SizedBox(height: isMobile ? 12 : 16),
                 if (isMobile)
                   Column(
@@ -459,17 +466,27 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                     children: [
                       Expanded(child: _buildOsChart(globalStats, isMobile)),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildOsMetrics(globalStats, color, isMobile)),
+                      Expanded(
+                        child: _buildOsMetrics(globalStats, color, isMobile),
+                      ),
                     ],
                   ),
 
                 SizedBox(height: isMobile ? 24 : 32),
-                _section("TEMPORAL_PULSE", "HOURLY TRAFFIC FREQUENCY", isMobile),
+                _section(
+                  "TEMPORAL_PULSE",
+                  "HOURLY TRAFFIC FREQUENCY",
+                  isMobile,
+                ),
                 SizedBox(height: isMobile ? 12 : 16),
                 _buildHourlyChart(urlsState, isMobile),
 
                 SizedBox(height: isMobile ? 24 : 32),
-                _section("NETWORK_DNA", "MULTI-DIMENSIONAL PERFORMANCE", isMobile),
+                _section(
+                  "NETWORK_DNA",
+                  "MULTI-DIMENSIONAL PERFORMANCE",
+                  isMobile,
+                ),
                 SizedBox(height: isMobile ? 12 : 16),
                 _buildRadarChart(isMobile),
 
@@ -479,7 +496,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 _buildLinearGauge(0.65, color, isMobile),
 
                 SizedBox(height: isMobile ? 24 : 32),
-                _section("ENGAGEMENT_MATRIX", "CLICK-THROUGH EFFICIENCY", isMobile),
+                _section(
+                  "ENGAGEMENT_MATRIX",
+                  "CLICK-THROUGH EFFICIENCY",
+                  isMobile,
+                ),
                 SizedBox(height: isMobile ? 12 : 16),
                 _buildEngagementMetrics(urlsState, color, isMobile),
               ],
@@ -583,7 +604,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildSystemOverview(GlobalStatsModel stats, Color color, bool isMobile) {
+  Widget _buildSystemOverview(
+    GlobalStatsModel stats,
+    Color color,
+    bool isMobile,
+  ) {
     if (isMobile) {
       return Column(
         children: [
@@ -716,7 +741,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildGeoBreakdown(GlobalStatsModel stats, Color color, bool isMobile) {
+  Widget _buildGeoBreakdown(
+    GlobalStatsModel stats,
+    Color color,
+    bool isMobile,
+  ) {
     final sortedGeo = stats.geoDistribution.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
