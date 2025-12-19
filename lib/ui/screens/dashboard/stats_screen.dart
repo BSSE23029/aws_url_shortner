@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
+import '../../widgets/cyber_feedback.dart';
 import '../../../providers/providers.dart';
 import '../../../models/models.dart';
 
@@ -31,10 +32,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       await ref.read(urlsProvider.notifier).loadDashboard();
       // Wait a bit for state to update, then prepare map with real data
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       final urlsState = ref.read(urlsProvider);
-      debugPrint("🗺️ About to build map. GeoDistribution: ${urlsState.globalStats.geoDistribution}");
-      
+      debugPrint(
+        "🗺️ About to build map. GeoDistribution: ${urlsState.globalStats.geoDistribution}",
+      );
+
       if (urlsState.globalStats.geoDistribution.isNotEmpty) {
         _prepareMapPolygons();
       } else {
@@ -48,7 +51,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   Future<void> _prepareMapPolygons() async {
     try {
       debugPrint("🗺️ Starting _prepareMapPolygons...");
-      
+
       final String jsonString = await rootBundle.loadString(
         'assets/world_map.json',
       );
@@ -58,25 +61,29 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
       List<Polygon> polygons = [];
 
-      debugPrint("🗺️ GeoDistribution data: ${urlsState.globalStats.geoDistribution}");
-      
+      debugPrint(
+        "🗺️ GeoDistribution data: ${urlsState.globalStats.geoDistribution}",
+      );
+
       for (var feature in features) {
         final props = feature['properties'];
         // Get country name from GeoJSON (your file uses 'name' or 'admin')
         final String countryName = props['name'] ?? props['admin'] ?? '';
-        
+
         // Convert country name to ISO code
         final String? isoCode = _getIsoCodeFromName(countryName);
-        
+
         // Look up clicks using ISO code
-        final int clicks = isoCode != null 
+        final int clicks = isoCode != null
             ? (urlsState.globalStats.geoDistribution[isoCode] ?? 0)
             : 0;
-            
+
         if (clicks > 0) {
-          debugPrint("🗺️ Country '$countryName' (ISO: $isoCode) has $clicks clicks - Color: ${_getMapColor(clicks)}");
+          debugPrint(
+            "🗺️ Country '$countryName' (ISO: $isoCode) has $clicks clicks - Color: ${_getMapColor(clicks)}",
+          );
         }
-        
+
         final Color countryColor = _getMapColor(clicks);
         final Color borderColor = _getBorderColor(clicks);
 
@@ -102,6 +109,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           _mapBuiltWithData = true;
         });
         debugPrint("🗺️ Map state updated!");
+        CyberFeedback.geospatialReady(context);
       }
     } catch (e) {
       debugPrint("❌ Map Load Error: $e");

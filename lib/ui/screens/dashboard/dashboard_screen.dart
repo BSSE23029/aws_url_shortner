@@ -8,6 +8,7 @@ import 'package:syncfusion_flutter_gauges/gauges.dart' as gauges;
 
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
+import '../../widgets/cyber_feedback.dart';
 import '../../../providers/providers.dart';
 import '../../../models/models.dart';
 
@@ -23,7 +24,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(urlsProvider.notifier).loadDashboard();
+      CyberFeedback.syncingTelemetry(context);
+      ref.read(urlsProvider.notifier).loadDashboard().then((_) {
+        final state = ref.read(urlsProvider);
+        if (state.errorMessage == null) {
+          CyberFeedback.geospatialReady(context);
+        } else {
+          CyberFeedback.telemetryOffline(context);
+        }
+      });
     });
   }
 

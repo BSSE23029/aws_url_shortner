@@ -7,6 +7,7 @@ import '../../widgets/glass_card.dart';
 import '../../widgets/physics_button.dart';
 import '../../widgets/stealth_input.dart';
 import '../../widgets/cyber_scaffold.dart';
+import '../../widgets/cyber_feedback.dart';
 import '../../../providers/providers.dart';
 
 class CreateUrlScreen extends ConsumerStatefulWidget {
@@ -25,6 +26,7 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
+    CyberFeedback.deployingAsset(context);
     await ref
         .read(urlsProvider.notifier)
         .createUrl(
@@ -33,7 +35,10 @@ class _CreateUrlScreenState extends ConsumerState<CreateUrlScreen> {
         );
     if (mounted && ref.read(urlsProvider).errorMessage == null) {
       HapticFeedback.lightImpact();
+      CyberFeedback.deploymentComplete(context);
       context.pop();
+    } else if (mounted) {
+      CyberFeedback.namespaceCollision(context);
     }
   }
 

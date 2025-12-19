@@ -6,6 +6,7 @@ import '../../widgets/glass_card.dart';
 import '../../widgets/physics_button.dart';
 import '../../widgets/cyber_scaffold.dart';
 import '../../widgets/stealth_input.dart';
+import '../../widgets/cyber_feedback.dart';
 import '../../../providers/providers.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -82,6 +83,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   void _handleSubmit() {
     if (_isValid) {
+      CyberFeedback.authStart(context);
       ref
           .read(authProvider.notifier)
           .signUp(
@@ -95,12 +97,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen(authProvider, (previous, next) {
-      if (next.confirmationRequired) context.push('/mfa');
+      if (next.confirmationRequired) {
+        CyberFeedback.mfaRequired(context);
+        context.push('/mfa');
+      }
       if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(next.errorMessage!)));
+        CyberFeedback.authFailure(context);
       }
     });
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
+import '../../widgets/cyber_feedback.dart';
 import '../../../providers/providers.dart';
 import '../../../providers/theme_provider.dart'; // Added this import
 
@@ -83,38 +84,7 @@ class AllUrlsScreen extends ConsumerWidget {
                                 ClipboardData(text: url.shortUrl),
                               );
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Row(
-                                      children: [
-                                        Icon(
-                                          PhosphorIconsBold.checkCircle,
-                                          color: Colors.white,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            'Copied to clipboard',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    backgroundColor: Colors.white.withValues(
-                                      alpha: 0.15,
-                                    ),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    duration: const Duration(
-                                      milliseconds: 1500,
-                                    ),
-                                  ),
-                                );
+                                CyberFeedback.bufferLoaded(context);
                               }
                             },
                             tooltip: 'Copy link',

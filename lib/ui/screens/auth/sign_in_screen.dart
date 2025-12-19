@@ -6,6 +6,7 @@ import '../../widgets/glass_card.dart';
 import '../../widgets/physics_button.dart';
 import '../../widgets/cyber_scaffold.dart';
 import '../../widgets/stealth_input.dart';
+import '../../widgets/cyber_feedback.dart';
 import '../../../providers/providers.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
@@ -42,6 +43,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   void _handleSubmit() {
     if (_isValid) {
+      CyberFeedback.authStart(context);
       ref
           .read(authProvider.notifier)
           .signIn(
@@ -57,12 +59,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     ref.listen(authProvider, (previous, next) {
       if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CyberFeedback.authFailure(context);
+      } else if (next.isAuthenticated && !(previous?.isAuthenticated ?? false)) {
+        CyberFeedback.authSuccess(context, next.user?.name ?? 'Operator');
       }
     });
 

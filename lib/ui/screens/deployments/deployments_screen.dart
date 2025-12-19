@@ -7,6 +7,7 @@ import 'package:syncfusion_flutter_charts/charts.dart' as charts;
 
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
+import '../../widgets/cyber_feedback.dart';
 import '../../../providers/providers.dart';
 import '../../../models/models.dart';
 
@@ -313,12 +314,7 @@ class _DeploymentsScreenState extends ConsumerState<DeploymentsScreen> {
                   ),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: url.shortUrl));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Link copied to clipboard'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    CyberFeedback.bufferLoaded(context);
                   },
                 ),
               ],

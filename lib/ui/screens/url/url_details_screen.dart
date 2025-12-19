@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
+import '../../widgets/cyber_feedback.dart';
 import '../../../models/models.dart';
 import '../../../providers/providers.dart';
 
@@ -24,6 +25,7 @@ class UrlDetailsScreen extends ConsumerWidget {
           icon: Icon(PhosphorIconsBold.trash, color: theme.colorScheme.error),
           onPressed: () {
             HapticFeedback.heavyImpact();
+            CyberFeedback.assetDecommissioned(context);
             ref.read(urlsProvider.notifier).deleteUrl(url.id);
             context.pop();
           },
@@ -104,36 +106,7 @@ class UrlDetailsScreen extends ConsumerWidget {
                                 ClipboardData(text: url.shortUrl),
                               );
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Row(
-                                      children: [
-                                        Icon(
-                                          PhosphorIconsBold.checkCircle,
-                                          color: Colors.white,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        const Text(
-                                          'Copied to clipboard',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    backgroundColor: Colors.white.withValues(
-                                      alpha: 0.15,
-                                    ),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    duration: const Duration(
-                                      milliseconds: 1500,
-                                    ),
-                                  ),
-                                );
+                                CyberFeedback.bufferLoaded(context);
                               }
                             },
                             icon: Icon(PhosphorIconsBold.copy, size: 18),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
 import '../../widgets/physics_button.dart';
 import '../../widgets/cyber_switch.dart';
+import '../../widgets/cyber_feedback.dart';
 import '../../../providers/theme_provider.dart';
 
 class AppearanceScreen extends ConsumerWidget {
@@ -35,7 +35,10 @@ class AppearanceScreen extends ConsumerWidget {
                     subtitle: "Vibration on interactions",
                     icon: PhosphorIconsRegular.vibrate,
                     value: settings.enableHaptics,
-                    onChanged: (val) => notifier.toggleHaptics(val),
+                    onChanged: (val) {
+                      notifier.toggleHaptics(val);
+                      CyberFeedback.kineticFeedback(context, val);
+                    },
                   ),
                   Divider(height: 1, color: txtColor.withValues(alpha: 0.1)),
                   CyberSwitch(
@@ -43,7 +46,10 @@ class AppearanceScreen extends ConsumerWidget {
                     subtitle: "Smooth transitions and effects",
                     icon: PhosphorIconsRegular.filmStrip,
                     value: settings.enableAnimations,
-                    onChanged: (val) => notifier.toggleAnimations(val),
+                    onChanged: (val) {
+                      notifier.toggleAnimations(val);
+                      CyberFeedback.visualOverhaul(context);
+                    },
                   ),
                 ],
               ),
