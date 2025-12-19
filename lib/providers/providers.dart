@@ -298,7 +298,6 @@ class UrlsState {
 
   int get myTotalClicks {
     final count = urls.fold(0, (sum, item) => sum + item.clickCount);
-    _log("🔍 myTotalClicks calculated: $count from ${urls.length} URLs");
     return count;
   }
 

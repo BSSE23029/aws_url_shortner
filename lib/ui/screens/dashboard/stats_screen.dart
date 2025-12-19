@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:syncfusion_flutter_charts/charts.dart' as charts;
 import 'package:syncfusion_flutter_gauges/gauges.dart' as gauges;
-import 'package:syncfusion_flutter_maps/maps.dart' as maps;
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:flutter/services.dart';
+import 'dart:convert';
 
 import '../../widgets/glass_card.dart';
 import '../../widgets/cyber_scaffold.dart';
@@ -18,12 +21,343 @@ class StatsScreen extends ConsumerStatefulWidget {
 }
 
 class _StatsScreenState extends ConsumerState<StatsScreen> {
+  List<Polygon>? _cachedPolygons;
+  bool _mapBuiltWithData = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(urlsProvider.notifier).loadDashboard();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(urlsProvider.notifier).loadDashboard();
+      // Wait a bit for state to update, then prepare map with real data
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      final urlsState = ref.read(urlsProvider);
+      debugPrint("🗺️ About to build map. GeoDistribution: ${urlsState.globalStats.geoDistribution}");
+      
+      if (urlsState.globalStats.geoDistribution.isNotEmpty) {
+        _prepareMapPolygons();
+      } else {
+        debugPrint("⚠️ No geo data available yet, waiting...");
+        await Future.delayed(const Duration(milliseconds: 500));
+        _prepareMapPolygons();
+      }
     });
+  }
+
+  Future<void> _prepareMapPolygons() async {
+    try {
+      debugPrint("🗺️ Starting _prepareMapPolygons...");
+      
+      final String jsonString = await rootBundle.loadString(
+        'assets/world_map.json',
+      );
+      final data = json.decode(jsonString);
+      final List features = data['features'];
+      final urlsState = ref.read(urlsProvider);
+
+      List<Polygon> polygons = [];
+
+      debugPrint("🗺️ GeoDistribution data: ${urlsState.globalStats.geoDistribution}");
+      
+      for (var feature in features) {
+        final props = feature['properties'];
+        // Get country name from GeoJSON (your file uses 'name' or 'admin')
+        final String countryName = props['name'] ?? props['admin'] ?? '';
+        
+        // Convert country name to ISO code
+        final String? isoCode = _getIsoCodeFromName(countryName);
+        
+        // Look up clicks using ISO code
+        final int clicks = isoCode != null 
+            ? (urlsState.globalStats.geoDistribution[isoCode] ?? 0)
+            : 0;
+            
+        if (clicks > 0) {
+          debugPrint("🗺️ Country '$countryName' (ISO: $isoCode) has $clicks clicks - Color: ${_getMapColor(clicks)}");
+        }
+        
+        final Color countryColor = _getMapColor(clicks);
+        final Color borderColor = _getBorderColor(clicks);
+
+        final geom = feature['geometry'];
+        if (geom['type'] == 'MultiPolygon') {
+          for (var poly in geom['coordinates']) {
+            for (var ring in poly) {
+              polygons.add(_createPolygon(ring, countryColor, borderColor));
+            }
+          }
+        } else if (geom['type'] == 'Polygon') {
+          for (var ring in geom['coordinates']) {
+            polygons.add(_createPolygon(ring, countryColor, borderColor));
+          }
+        }
+      }
+
+      debugPrint("🗺️ Created ${polygons.length} polygons. Setting state...");
+
+      if (mounted) {
+        setState(() {
+          _cachedPolygons = polygons;
+          _mapBuiltWithData = true;
+        });
+        debugPrint("🗺️ Map state updated!");
+      }
+    } catch (e) {
+      debugPrint("❌ Map Load Error: $e");
+    }
+  }
+
+  Polygon _createPolygon(List coordinates, Color color, Color borderColor) {
+    return Polygon(
+      points: coordinates.map((pt) {
+        double lng = pt[0].toDouble().clamp(-180.0, 180.0);
+        double lat = pt[1].toDouble().clamp(-90.0, 90.0);
+        return LatLng(lat, lng);
+      }).toList(),
+      color: color,
+      borderStrokeWidth: 0.8,
+      borderColor: borderColor,
+    );
+  }
+
+  Color _getBorderColor(int count) {
+    if (count == 0) {
+      // Base country border - very subtle
+      return Colors.cyanAccent.withValues(alpha: 0.1);
+    }
+    if (count > 5000) {
+      // Ultra high traffic - bright glowing cyan border
+      return Colors.cyanAccent.withValues(alpha: 1.0);
+    }
+    if (count > 1000) {
+      // High traffic - bright cyan border
+      return Colors.cyanAccent.withValues(alpha: 0.85);
+    }
+    if (count > 100) {
+      // Medium traffic - visible cyan border
+      return Colors.cyanAccent.withValues(alpha: 0.7);
+    }
+    // Low traffic - faint cyan border
+    return Colors.cyanAccent.withValues(alpha: 0.5);
+  }
+
+  Color _getMapColor(int count) {
+    if (count == 0) {
+      // Base country color - very dark, almost invisible
+      return const Color(0xFF0A1929).withValues(alpha: 0.3);
+    }
+    if (count > 5000) {
+      // Ultra high traffic - blazing cyan with glow
+      return Colors.cyanAccent.withValues(alpha: 0.8);
+    }
+    if (count > 1000) {
+      // High traffic - very bright cyan
+      return Colors.cyanAccent.withValues(alpha: 0.6);
+    }
+    if (count > 100) {
+      // Medium traffic - bright cyan
+      return Colors.cyanAccent.withValues(alpha: 0.4);
+    }
+    // Low traffic (1-100) - clearly visible cyan
+    return Colors.cyanAccent.withValues(alpha: 0.25);
+  }
+
+  Widget _buildGlobalMap(UrlsState state, Color color) {
+    if (_cachedPolygons == null) {
+      return GlassCard(
+        height: 320,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: Colors.cyanAccent),
+              const SizedBox(height: 16),
+              Text(
+                'LOADING WORLD MAP...',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: color.withValues(alpha: 0.5),
+                  fontFamily: 'Courier',
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return GlassCard(
+      height: 320,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
+          children: [
+            // Dark cyberpunk background - deeper space theme
+            Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.5,
+                  colors: [
+                    const Color(0xFF001F3F), // Deep navy center
+                    const Color(0xFF000814), // Almost black
+                    Colors.black,
+                  ],
+                ),
+              ),
+            ),
+            // The actual map
+            FlutterMap(
+              options: MapOptions(
+                initialCenter: const LatLng(20, 0),
+                initialZoom: 1.2,
+                minZoom: 1.0,
+                maxZoom: 3.0,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                ),
+              ),
+              children: [PolygonLayer(polygons: _cachedPolygons!)],
+            ),
+            // Cyber grid overlay
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.cyanAccent.withValues(alpha: 0.1),
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Top-left legend
+            Positioned(
+              top: 12,
+              left: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: Colors.cyanAccent.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'TRAFFIC DENSITY',
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.cyanAccent,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    _buildLegendItem(
+                      '5000+',
+                      Colors.cyanAccent.withValues(alpha: 0.8),
+                    ),
+                    _buildLegendItem(
+                      '1000+',
+                      Colors.cyanAccent.withValues(alpha: 0.5),
+                    ),
+                    _buildLegendItem(
+                      '100+',
+                      Colors.cyanAccent.withValues(alpha: 0.3),
+                    ),
+                    _buildLegendItem(
+                      '1+',
+                      Colors.cyanAccent.withValues(alpha: 0.15),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Bottom-right stats
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: Colors.cyanAccent.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      PhosphorIconsRegular.globe,
+                      size: 14,
+                      color: Colors.cyanAccent,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${state.globalStats.geoDistribution.length} REGIONS',
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.cyanAccent,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 12,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+              border: Border.all(
+                color: Colors.cyanAccent.withValues(alpha: 0.3),
+                width: 0.5,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 8,
+              color: Colors.white70,
+              fontFamily: 'Courier',
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -589,119 +923,6 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildGlobalMap(UrlsState state, Color color) {
-    // Check if we have geo data
-    if (state.globalStats.geoDistribution.isEmpty) {
-      return GlassCard(
-        height: 320,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                PhosphorIconsRegular.globe,
-                size: 48,
-                color: color.withValues(alpha: 0.3),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'NO GEOGRAPHICAL DATA',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: color.withValues(alpha: 0.5),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Create a map of country names to click counts
-    final countryDataMap = <String, int>{};
-    for (final entry in state.globalStats.geoDistribution.entries) {
-      final countryName = _getCountryName(entry.key);
-      countryDataMap[countryName] = entry.value;
-    }
-
-    return GlassCard(
-      height: 320,
-      padding: EdgeInsets.zero,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: maps.SfMaps(
-          layers: [
-            maps.MapShapeLayer(
-              source: maps.MapShapeSource.asset(
-                'assets/world_map.json',
-                shapeDataField: 'name',
-              ),
-              color: color.withValues(alpha: 0.05),
-              strokeColor: color.withValues(alpha: 0.15),
-              strokeWidth: 0.5,
-              shapeTooltipBuilder: (BuildContext context, int index) {
-                return const SizedBox.shrink();
-              },
-              sublayers: [
-                maps.MapShapeSublayer(
-                  source: maps.MapShapeSource.asset(
-                    'assets/world_map.json',
-                    shapeDataField: 'name',
-                    dataCount: countryDataMap.length,
-                    primaryValueMapper: (int index) {
-                      final keys = countryDataMap.keys.toList();
-                      return index < keys.length ? keys[index] : '';
-                    },
-                    shapeColorValueMapper: (int index) {
-                      final keys = countryDataMap.keys.toList();
-                      if (index < keys.length) {
-                        final clicks = countryDataMap[keys[index]] ?? 0;
-                        // Return a color directly based on clicks
-                        if (clicks > 500) {
-                          return Colors.cyanAccent;
-                        } else if (clicks > 100) {
-                          return Colors.cyanAccent.withValues(alpha: 0.6);
-                        } else if (clicks > 0) {
-                          return Colors.cyanAccent.withValues(alpha: 0.3);
-                        }
-                      }
-                      return null;
-                    },
-                  ),
-                  shapeTooltipBuilder: (BuildContext context, int index) {
-                    final keys = countryDataMap.keys.toList();
-                    if (index >= 0 && index < keys.length) {
-                      final countryName = keys[index];
-                      final clicks = countryDataMap[countryName] ?? 0;
-                      if (clicks > 0) {
-                        return Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.black87,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '$countryName: $clicks clicks',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildHourlyChart(UrlsState state) {
     return GlassCard(
       height: 250,
@@ -820,6 +1041,197 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         ],
       ),
     );
+  }
+
+  String? _getIsoCodeFromName(String countryName) {
+    // Reverse lookup: GeoJSON country name → ISO code
+    const reverseMap = {
+      'Afghanistan': 'AF',
+      'Albania': 'AL',
+      'Algeria': 'DZ',
+      'Angola': 'AO',
+      'Argentina': 'AR',
+      'Armenia': 'AM',
+      'Australia': 'AU',
+      'Austria': 'AT',
+      'Azerbaijan': 'AZ',
+      'Bahamas': 'BS',
+      'Bahrain': 'BH',
+      'Bangladesh': 'BD',
+      'Belarus': 'BY',
+      'Belgium': 'BE',
+      'Belize': 'BZ',
+      'Benin': 'BJ',
+      'Bhutan': 'BT',
+      'Bolivia': 'BO',
+      'Bosnia and Herzegovina': 'BA',
+      'Bosnia and Herz.': 'BA',
+      'Botswana': 'BW',
+      'Brazil': 'BR',
+      'Brunei': 'BN',
+      'Bulgaria': 'BG',
+      'Burkina Faso': 'BF',
+      'Burundi': 'BI',
+      'Cambodia': 'KH',
+      'Cameroon': 'CM',
+      'Canada': 'CA',
+      'Central African Republic': 'CF',
+      'Central African Rep.': 'CF',
+      'Chad': 'TD',
+      'Chile': 'CL',
+      'China': 'CN',
+      'Colombia': 'CO',
+      'Congo': 'CG',
+      'Democratic Republic of the Congo': 'CD',
+      'Dem. Rep. Congo': 'CD',
+      'Costa Rica': 'CR',
+      'Côte d\'Ivoire': 'CI',
+      'Ivory Coast': 'CI',
+      'Croatia': 'HR',
+      'Cuba': 'CU',
+      'Cyprus': 'CY',
+      'Czech Republic': 'CZ',
+      'Czech Rep.': 'CZ',
+      'Denmark': 'DK',
+      'Djibouti': 'DJ',
+      'Dominican Republic': 'DO',
+      'Dominican Rep.': 'DO',
+      'Ecuador': 'EC',
+      'Egypt': 'EG',
+      'El Salvador': 'SV',
+      'Equatorial Guinea': 'GQ',
+      'Eq. Guinea': 'GQ',
+      'Eritrea': 'ER',
+      'Estonia': 'EE',
+      'Ethiopia': 'ET',
+      'Fiji': 'FJ',
+      'Finland': 'FI',
+      'France': 'FR',
+      'Gabon': 'GA',
+      'Gambia': 'GM',
+      'Georgia': 'GE',
+      'Germany': 'DE',
+      'Ghana': 'GH',
+      'Greece': 'GR',
+      'Guatemala': 'GT',
+      'Guinea': 'GN',
+      'Guinea-Bissau': 'GW',
+      'Guyana': 'GY',
+      'Haiti': 'HT',
+      'Honduras': 'HN',
+      'Hungary': 'HU',
+      'Iceland': 'IS',
+      'India': 'IN',
+      'Indonesia': 'ID',
+      'Iran': 'IR',
+      'Iraq': 'IQ',
+      'Ireland': 'IE',
+      'Israel': 'IL',
+      'Italy': 'IT',
+      'Jamaica': 'JM',
+      'Japan': 'JP',
+      'Jordan': 'JO',
+      'Kazakhstan': 'KZ',
+      'Kenya': 'KE',
+      'South Korea': 'KR',
+      'Korea': 'KR',
+      'North Korea': 'KP',
+      'Dem. Rep. Korea': 'KP',
+      'Kuwait': 'KW',
+      'Kyrgyzstan': 'KG',
+      'Laos': 'LA',
+      'Latvia': 'LV',
+      'Lebanon': 'LB',
+      'Lesotho': 'LS',
+      'Liberia': 'LR',
+      'Libya': 'LY',
+      'Lithuania': 'LT',
+      'Luxembourg': 'LU',
+      'Macedonia': 'MK',
+      'Madagascar': 'MG',
+      'Malawi': 'MW',
+      'Malaysia': 'MY',
+      'Mali': 'ML',
+      'Mauritania': 'MR',
+      'Mexico': 'MX',
+      'Moldova': 'MD',
+      'Mongolia': 'MN',
+      'Montenegro': 'ME',
+      'Morocco': 'MA',
+      'Mozambique': 'MZ',
+      'Myanmar': 'MM',
+      'Namibia': 'NA',
+      'Nepal': 'NP',
+      'Netherlands': 'NL',
+      'New Zealand': 'NZ',
+      'Nicaragua': 'NI',
+      'Niger': 'NE',
+      'Nigeria': 'NG',
+      'Norway': 'NO',
+      'Oman': 'OM',
+      'Pakistan': 'PK',
+      'Panama': 'PA',
+      'Papua New Guinea': 'PG',
+      'Paraguay': 'PY',
+      'Peru': 'PE',
+      'Philippines': 'PH',
+      'Poland': 'PL',
+      'Portugal': 'PT',
+      'Puerto Rico': 'PR',
+      'Qatar': 'QA',
+      'Romania': 'RO',
+      'Russia': 'RU',
+      'Russian Federation': 'RU',
+      'Rwanda': 'RW',
+      'Saudi Arabia': 'SA',
+      'Senegal': 'SN',
+      'Serbia': 'RS',
+      'Sierra Leone': 'SL',
+      'Singapore': 'SG',
+      'Slovakia': 'SK',
+      'Slovenia': 'SI',
+      'Solomon Islands': 'SB',
+      'Solomon Is.': 'SB',
+      'Somalia': 'SO',
+      'South Africa': 'ZA',
+      'South Sudan': 'SS',
+      'S. Sudan': 'SS',
+      'Spain': 'ES',
+      'Sri Lanka': 'LK',
+      'Sudan': 'SD',
+      'Suriname': 'SR',
+      'Swaziland': 'SZ',
+      'Eswatini': 'SZ',
+      'Sweden': 'SE',
+      'Switzerland': 'CH',
+      'Syria': 'SY',
+      'Taiwan': 'TW',
+      'Tajikistan': 'TJ',
+      'Tanzania': 'TZ',
+      'Thailand': 'TH',
+      'Timor-Leste': 'TL',
+      'East Timor': 'TL',
+      'Togo': 'TG',
+      'Trinidad and Tobago': 'TT',
+      'Tunisia': 'TN',
+      'Turkey': 'TR',
+      'Turkmenistan': 'TM',
+      'Uganda': 'UG',
+      'Ukraine': 'UA',
+      'United Arab Emirates': 'AE',
+      'United Kingdom': 'GB',
+      'United States': 'US',
+      'United States of America': 'US',
+      'Uruguay': 'UY',
+      'Uzbekistan': 'UZ',
+      'Venezuela': 'VE',
+      'Vietnam': 'VN',
+      'Viet Nam': 'VN',
+      'Yemen': 'YE',
+      'Zambia': 'ZM',
+      'Zimbabwe': 'ZW',
+    };
+    return reverseMap[countryName];
   }
 
   String _getCountryName(String code) {
